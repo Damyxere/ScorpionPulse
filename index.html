@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scorpion Pulse - Player</title>
+    <style>
+        :root {
+            --bg-color: #070708;
+            --card-bg: #121214;
+            --primary: #ff2a2a;
+            --primary-hover: #cc0000;
+            --border: #222226;
+            --text-muted: #888893;
+        }
+
+        body { 
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; 
+            background: var(--bg-color); 
+            color: white; 
+            margin: 0; 
+            padding: 0; 
+            display: flex; 
+            height: 100vh; 
+            overflow: hidden; 
+        }
+
+        .sidebar { 
+            width: 280px; 
+            background: var(--card-bg); 
+            border-right: 1px solid var(--border); 
+            padding: 20px; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: space-between; 
+            box-sizing: border-box; 
+        }
+
+        .main-panel { 
+            flex: 1; 
+            padding: 30px; 
+            overflow-y: auto; 
+            box-sizing: border-box; 
+            background-image: radial-gradient(circle at bottom right, rgba(255, 42, 42, 0.03), transparent 50%);
+        }
+
+        .brand { 
+            font-size: 1.6rem; 
+            font-weight: 900; 
+            background: linear-gradient(45deg, #ff2a2a, #ff7300); 
+            -webkit-background-clip: text; 
+            -webkit-text-fill-color: transparent; 
+            margin-bottom: 30px; 
+            letter-spacing: 1px;
+        }
+
+        .nav-section h3 { 
+            font-size: 0.8rem; 
+            color: #55555f; 
+            text-transform: uppercase; 
+            margin-bottom: 12px; 
+            letter-spacing: 1px;
+        }
+
+        .nav-list { list-style: none; padding: 0; margin: 0; }
+        .nav-list li { 
+            padding: 12px; 
+            color: #aaa; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            transition: all 0.2s; 
+            margin-bottom: 6px; 
+            font-weight: 500;
+        }
+        .nav-list li:hover { background: #1a1a1f; color: white; }
+
+        .user-tag { 
+            background: #1a1a1f; 
+            padding: 14px; 
+            border-radius: 10px; 
+            border: 1px solid var(--border); 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+        }
+        
+        #label-user {
+            font-size: 0.9rem;
+            color: #ccc;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 140px;
+        }
+
+        .btn-logout { 
+            background: transparent; 
+            border: none; 
+            color: var(--primary); 
+            font-weight: bold; 
+            cursor: pointer; 
+            font-size: 0.9rem;
+            transition: color 0.2s;
+        }
+        .btn-logout:hover { color: #ff5555; }
+
+        .search-box { display: flex; gap: 12px; margin-bottom: 35px; }
+        
+        input { 
+            flex: 1; 
+            padding: 14px; 
+            border-radius: 8px; 
+            border: 1px solid var(--border); 
+            background: #121214; 
+            color: white; 
+            font-size: 1rem; 
+            transition: border-color 0.2s;
+        }
+        input:focus { border-color: var(--primary); outline: none; }
+
+        .btn-search { 
+            padding: 0 30px; 
+            background: var(--primary); 
+            color: white; 
+            border: none; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-weight: bold; 
+            font-size: 1rem;
+            transition: background 0.2s;
+        }
+        .btn-search:hover { background: var(--primary-hover); }
+
+        #player-zone { 
+            background: #121214; 
+            min-height: 250px; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            border-radius: 16px; 
+            border: 1px solid var(--border); 
+            margin-bottom: 35px; 
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+        }
+        
+        #placeholder-testo { color: var(--text-muted); font-size: 1rem; }
+
+        .traccia-card { 
+            background: #121214; 
+            padding: 16px; 
+            margin-bottom: 12px; 
+            border-radius: 10px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            border: 1px solid var(--border); 
+            transition: border-color 0.2s;
+        }
+        .traccia-card:hover { border-color: #333339; }
+        .traccia-card span { font-weight: 500; }
+
+        .btn-play { 
+            background: #00cc66; 
+            color: white; 
+            border: none; 
+            padding: 10px 20px; 
+            border-radius: 6px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            transition: background 0.2s;
+        }
+        .btn-play:hover { background: #00994d; }
+
+        /* Copertura di caricamento iniziale per evitare flash bianchi o di contenuti prima del controllo login */
+        #loading-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg-color); z-index: 9999; display: flex;
+            justify-content: center; align-items: center; font-weight: bold;
+        }
+
+        @media (max-width: 768px) {
+            body { flex-direction: column; overflow-y: auto; height: auto; }
+            .sidebar { width: 100%; height: auto; border-right: none; border-bottom: 1px solid var(--border); gap: 20px; }
+            .main-panel { height: auto; overflow: visible; padding: 20px; }
+        }
+    </style>
+
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+    <script src="firebase-loader.js"></script>
+</head>
+<body>
+
+    <div id="loading-overlay">Caricamento Scorpion Pulse...</div>
+
+    <div class="sidebar">
+        <div>
+            <div class="brand">🦂 SCORPION PULSE</div>
+            <div class="nav-section">
+                <h3>Libreria</h3>
+                <ul class="nav-list">
+                    <li>❤️ Brani Preferiti</li>
+                    <li>📂 Playlist</li>
+                </ul>
+            </div>
+        </div>
+        <div class="user-tag">
+            <span id="label-user">Caricamento...</span>
+            <button class="btn-logout" onclick="eseguiLogout()">Esci</button>
+        </div>
+    </div>
+
+    <div class="main-panel">
+        <div class="search-box">
+            <input type="text" id="cerca-input" placeholder="Cerca una canzone o artista...">
+            <button class="btn-search" onclick="avviaRicerca()">Cerca</button>
+        </div>
+        
+        <div id="player-zone">
+            <p id="placeholder-testo">Scegli un brano dai risultati per avviare la riproduzione.</p>
+            <div id="youtube-player-vero" style="width:100%; display:none;"></div>
+        </div>
+        
+        <h2>Risultati della ricerca</h2>
+        <div id="risultati-lista"></div>
+    </div>
+
+    <script>
+        const overlay = document.getElementById('loading-overlay');
+
+        // 🔥 IL CUORE DEL REINDIRIZZAMENTO (CONTROLLO DI SICUREZZA)
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                // L'utente è loggato correttamente! Recuperiamo la sua mail o username
+                document.getElementById('label-user').innerText = user.email;
+                // Nascondiamo la schermata di caricamento per mostrare il sito
+                overlay.style.display = 'none';
+            } else {
+                // L'utente NON è loggato. Lo rispediamo istantaneamente alla pagina di login
+                window.location.href = "login.html";
+            }
+        });
+
+        // FUNZIONE DI RICERCA DEMO (IN ATTESA DI COLLEGARE L'API DI YOUTUBE)
+        function avviaRicerca() {
+            const queryText = document.getElementById('cerca-input').value.trim();
+            if(!queryText) return;
+            
+            const lista = document.getElementById('risultati-lista');
+            lista.innerHTML = `
+                <div class="traccia-card">
+                    <span>${queryText} (Traccia di Test)</span>
+                    <button class="btn-play" onclick="riproduciTraccia('dQw4w9WgXcQ')">▶ Play</button>
+                </div>`;
+        }
+
+        // MOTORE DI RIPRODUZIONE VIDEO/AUDIO TRAMITE EMBED
+        function riproduciTraccia(idVideo) {
+            document.getElementById('placeholder-testo').style.display = 'none';
+            const container = document.getElementById('youtube-player-vero');
+            container.style.display = 'block';
+            container.innerHTML = `
+                <iframe width="100%" height="250" 
+                    src="https://www.youtube.com/embed/${idVideo}?autoplay=1" 
+                    frameborder="0" 
+                    allow="autoplay; encrypted-media" 
+                    allowfullscreen 
+                    style="border-radius:12px; border: 1px solid var(--border);">
+                </iframe>`;
+        }
+
+        // DISCONNESSIONE SICURA
+        function eseguiLogout() {
+            auth.signOut().then(() => { 
+                window.location.href = "login.html"; 
+            }).catch((err) => {
+                alert("Errore durante il logout: " + err.message);
+            });
+        }
+    </script>
+</body>
+  </html>
+  

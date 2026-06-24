@@ -1,6 +1,6 @@
 // Configurazione centralizzata di Firebase per Scorpion Pulse
 const firebaseConfig = {
-    apiKey: "AIzaSyA1-TUTTA_LA_TUA_API_KEY", 
+    apiKey: "AIzaSyCBxbf8ZhTghee43A6SLYBWBRsFK7yQym4", 
     authDomain: "scorpion-pulse.firebaseapp.com",
     projectId: "scorpion-pulse",
     storageBucket: "scorpion-pulse.appspot.com",
@@ -28,7 +28,7 @@ try {
     });
 
     console.log("Scorpion Pulse DB: Sincronizzazione completata con successo.");
-}} catch (error) {
+}} } catch (error) {
     console.error("Errore critico durante la sincronizzazione di Firebase:", error);
     
     // Sistema di ripiego automatico (Fall-back) aggiornato
@@ -47,14 +47,5 @@ try {
                 user: { email: email, uid: "guest_mode" }
             });
         }
-    };
-}
-    // Sistema di ripiego automatico (Fall-back) per evitare il blocco dell'interfaccia
-    window.auth = {
-        onAuthStateChanged: (callback) => {
-            // Genera una sessione ospite temporanea per non interrompere la ricerca dei brani
-            callback({ email: "guest.scorpion@pulse.local", uid: "guest_mode" });
-        },
-        signOut: () => { return Promise.resolve(); }
     };
 }

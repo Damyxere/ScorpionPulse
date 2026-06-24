@@ -3,22 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Scorpion Pulse - Dashboard</title>
+    <title>Scorpion Pulse - Mixtube</title>
     <style>
         :root {
-            --bg-color: #070708;
-            --sidebar-bg: #121214;
-            --card-bg: #1a1a1e;
+            --bg-main: #09090b;
+            --bg-sidebar: #020203;
+            --bg-card: #141417;
+            --bg-card-hover: #1e1e24;
             --primary: #ff2a2a;
-            --primary-hover: #cc0000;
-            --border: #222226;
-            --text-muted: #888893;
+            --text-main: #ffffff;
+            --text-muted: #a1a1aa;
+            --border: #27272a;
+            --player-bg: #0f0f11;
         }
 
         body {
             font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            background-color: var(--bg-color);
-            color: white;
+            background-color: var(--bg-main);
+            color: var(--text-main);
             margin: 0;
             padding: 0;
             display: flex;
@@ -26,198 +28,262 @@
             overflow: hidden;
         }
 
-        /* BARRA LATERALE */
+        /* SIDEBAR IN STILE MIXTUBE */
         .sidebar {
-            width: 260px;
-            background: var(--sidebar-bg);
+            width: 240px;
+            background: var(--bg-sidebar);
             border-right: 1px solid var(--border);
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            padding: 20px;
+            padding: 24px;
             box-sizing: border-box;
         }
 
         .brand {
-            font-size: 1.6rem;
-            font-weight: 900;
-            background: linear-gradient(45deg, #ff2a2a, #ff7300);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            font-size: 1.4rem;
+            font-weight: 800;
             letter-spacing: 1px;
-            margin-bottom: 30px;
-            text-align: center;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 32px;
         }
 
-        .menu-items {
+        .brand span {
+            color: var(--primary);
+        }
+
+        .menu-group {
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 8px;
         }
 
         .menu-btn {
             background: transparent;
-            color: #aaa;
+            color: var(--text-muted);
             border: none;
-            padding: 12px 15px;
+            padding: 12px 16px;
             border-radius: 8px;
             text-align: left;
-            font-size: 1rem;
+            font-size: 0.95rem;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.2s ease;
             font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
 
         .menu-btn:hover, .menu-btn.active {
-            background: rgba(255, 42, 42, 0.1);
-            color: var(--primary);
+            background: #18181b;
+            color: var(--text-main);
         }
 
-        .user-profile {
-            background: rgba(255, 255, 255, 0.03);
-            padding: 15px;
+        .menu-btn.active {
+            border-left: 3px solid var(--primary);
+            border-radius: 0 8px 8px 0;
+        }
+
+        .user-panel {
+            background: #141417;
+            padding: 16px;
             border-radius: 12px;
             border: 1px solid var(--border);
-            text-align: center;
         }
 
         .user-name {
-            font-size: 0.95rem;
-            font-weight: bold;
-            margin-bottom: 10px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+            text-align: center;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
         }
 
         .logout-btn {
-            background: #ff2a2a;
-            color: white;
+            background: #27272a;
+            color: var(--text-main);
             border: none;
-            padding: 8px 15px;
+            padding: 8px;
             border-radius: 6px;
             cursor: pointer;
-            font-weight: bold;
+            font-weight: 600;
             font-size: 0.85rem;
             width: 100%;
             transition: background 0.2s;
         }
 
-        .logout-btn:hover { background: var(--primary-hover); }
+        .logout-btn:hover {
+            background: var(--primary);
+        }
 
         /* CONTENUTO PRINCIPALE */
         .main-content {
             flex: 1;
             display: flex;
             flex-direction: column;
-            padding: 30px;
+            padding: 32px 32px 120px 32px;
             overflow-y: auto;
             box-sizing: border-box;
         }
 
-        /* BARRA DI RICERCA LIVE STYLE MIXTUBE */
+        /* BARRA DI RICERCA */
         .search-container {
-            margin-bottom: 30px;
-            position: relative;
+            margin-bottom: 32px;
+            max-width: 600px;
+            width: 100%;
         }
 
         .search-bar {
             width: 100%;
-            padding: 16px 20px;
-            background: var(--sidebar-bg);
+            padding: 14px 24px;
+            background: #141417;
             border: 1px solid var(--border);
-            border-radius: 30px;
+            border-radius: 50px;
             color: white;
-            font-size: 1.1rem;
+            font-size: 1rem;
             box-sizing: border-box;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
         }
 
         .search-bar:focus {
             border-color: var(--primary);
             outline: none;
-            box-shadow: 0 0 15px rgba(255, 42, 42, 0.2);
+            background: #1e1e24;
+            box-shadow: 0 0 15px rgba(255, 42, 42, 0.15);
         }
 
-        /* GRIGLIA VIDEO (RISULTATI DI RICERCA) */
+        h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 0 0 20px 0;
+        }
+
+        /* GRIGLIA BRANI MIXTUBE STYLE */
         .results-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-            gap: 25px;
-            margin-top: 20px;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 24px;
         }
 
-        .video-card {
-            background: var(--card-bg);
+        .track-card {
+            background: var(--bg-card);
+            padding: 16px;
             border-radius: 12px;
-            overflow: hidden;
             border: 1px solid var(--border);
             cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: all 0.25s ease;
         }
 
-        .video-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6);
-            border-color: #333;
+        .track-card:hover {
+            background: var(--bg-card-hover);
+            transform: translateY(-4px);
         }
 
-        .video-thumbnail {
-            position: relative;
+        .track-cover {
             width: 100%;
-            padding-top: 56.25%; /* Ratio 16:9 */
+            aspect-ratio: 1;
+            background-size: cover;
+            background-position: center;
+            border-radius: 8px;
+            margin-bottom: 14px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+        }
+
+        .track-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .track-artist {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* PLAYER BAR FISSA IN BASSO */
+        .player-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 90px;
+            background: var(--player-bg);
+            border-top: 1px solid var(--border);
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 32px;
+            box-sizing: border-box;
+            z-index: 100;
+        }
+
+        .player-track-info {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            width: 30%;
+        }
+
+        .player-mini-cover {
+            width: 56px;
+            height: 56px;
+            border-radius: 6px;
             background-size: cover;
             background-position: center;
         }
 
-        .video-info {
-            padding: 12px;
-        }
-
-        .video-title {
-            font-size: 0.95rem;
-            font-weight: bold;
-            margin: 0 0 5px 0;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
+        .player-text-details {
             overflow: hidden;
-            line-height: 1.3;
         }
 
-        /* SEZIONE VIDEO PLAYER FISSO IN BASSO */
-        .player-section {
-            display: none;
-            margin-top: auto;
-            background: #121214;
-            border: 1px solid var(--border);
-            padding: 20px;
-            border-radius: 16px;
+        .player-current-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .player-current-artist {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .player-controls {
+            display: flex;
+            flex-direction: column;
             align-items: center;
-            gap: 20px;
+            gap: 8px;
+            width: 40%;
         }
 
-        .player-container {
-            width: 320px;
-            height: 180px;
-            border-radius: 8px;
-            overflow: hidden;
+        .audio-element {
+            width: 100%;
+            max-width: 500px;
+            height: 32px;
         }
 
-        .player-details {
-            flex: 1;
+        audio::-webkit-media-controls-enclosure {
+            background-color: var(--player-bg);
         }
-
-        .player-details h3 { margin: 0 0 5px 0; font-size: 1.1rem; }
-        .player-details p { margin: 0; color: var(--text-muted); font-size: 0.9rem; }
     </style>
 
-    <!-- CARICAMENTO DELLE LIBRERIE COMPAT DI FIREBASE -->
+    <!-- FIREBASE COMPAT LIBRARIES -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-
-    <!-- CONFIGURAZIONE AGGIORNATA E FUNZIONANTE -->
     <script src="firebase-loader.js?v=2"></script>
 </head>
 <body>
@@ -225,168 +291,163 @@
     <!-- BARRA LATERALE -->
     <div class="sidebar">
         <div>
-            <div class="brand">🦂 SCORPION PULSE</div>
-            <div class="menu-items">
-                <button class="menu-btn active">🏠 Home / Mixtube</button>
-                <button class="menu-btn">🔥 Trap & Drill Italia</button>
-                <button class="menu-btn">❤️ Brani Preferiti</button>
+            <div class="brand">🦂 Scorpion<span>Pulse</span></div>
+            <div class="menu-group">
+                <button class="menu-btn active">🎵 Dashboard</button>
+                <button class="menu-btn">🔥 Trap & Drill</button>
+                <button class="menu-btn">💜 Preferiti</button>
             </div>
         </div>
 
-        <!-- BLOCCO PROFILO -->
-        <div class="user-profile">
-            <div class="user-name" id="display-user">Caricamento...</div>
-            <button class="logout-btn" id="btn-logout">Esci</button>
+        <div class="user-panel">
+            <div class="user-name" id="display-user">Connessione...</div>
+            <button class="logout-btn" id="btn-logout">Scollegati</button>
         </div>
     </div>
 
-    <!-- MAIN CONTENT -->
+    <!-- CORPO PRINCIPALE -->
     <div class="main-content">
-        <!-- BARRA RICERCA LIVE -->
         <div class="search-container">
-            <input type="text" class="search-bar" id="search-input" placeholder="Cerca tracce, artisti o album drill/trap...">
+            <!-- Input per la ricerca live istantanea -->
+            <input type="text" class="search-bar" id="search-input" placeholder="Scrivi un brano o artista (es. 'stelle')...">
         </div>
 
-        <h2 id="section-title">Brani di Tendenza</h2>
+        <h2 id="section-title">Brani consigliati</h2>
+        <div class="results-grid" id="results-container"></div>
+    </div>
+
+    <!-- AUDIO PLAYER CONTROLS IN BASSO -->
+    <div class="player-bar" id="player-bar">
+        <div class="player-track-info">
+            <div class="player-mini-cover" id="p-cover"></div>
+            <div class="player-text-details">
+                <div class="player-current-title" id="p-title">Nessuna traccia</div>
+                <div class="player-current-artist" id="p-artist">Scegli un brano</div>
+            </div>
+        </div>
+
+        <div class="player-controls">
+            <audio class="audio-element" id="audio-player" controls autoplay></audio>
+        </div>
         
-        <!-- GRIGLIA DEI RISULTATI -->
-        <div class="results-grid" id="results-container">
-            <!-- I video caricati dinamicamente appariranno qui -->
-        </div>
-
-        <!-- PLAYER IN BASSO INTEGRATO -->
-        <div class="player-section" id="music-player">
-            <div class="player-container">
-                <iframe id="yt-iframe" width="100%" height="100%" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-            </div>
-            <div class="player-details">
-                <h3 id="player-title">Nessun brano in riproduzione</h3>
-                <p id="player-author">Seleziona un video per avviarlo</p>
-            </div>
-        </div>
+        <div style="width: 30%;"></div>
     </div>
 
     <script>
-        // 1. GESTIONE UTENTE E LOGOUT CON CONTROLLO STATO
+        // 1. VERIFICA UTENTE LOGGATO VIA FIREBASE
         if (typeof auth !== 'undefined') {
             auth.onAuthStateChanged((user) => {
                 if (user) {
-                    document.getElementById('display-user').innerText = "👤 " + (user.email);
+                    document.getElementById('display-user').innerText = user.email;
                 } else {
-                    window.location.href = "login.html"; // Se non è loggato, rimandalo alla pagina di login
+                    window.location.href = "login.html"; //
                 }
             });
         }
 
         document.getElementById('btn-logout').addEventListener('click', () => {
             if (typeof auth !== 'undefined') {
-                auth.signOut().then(() => {
-                    window.location.href = "login.html"; //
-                });
+                auth.signOut().then(() => { window.location.href = "login.html"; }); //
             }
         });
 
-        // 2. MOTORE DI RICERCA LIVE (TRAMITE FEED PUBBLICO RSS/NO-KEY YOUTUBE)
+        // 2. MOTORE DI RICERCA LIVE ISTANTANEO (SENZA AD)
         const searchInput = document.getElementById('search-input');
         const resultsContainer = document.getElementById('results-container');
         let timeoutRicerca = null;
 
-        // Lista iniziale di tendenze Drill/Trap Italiane
+        // Lista di default all'apertura del sito
         const trendIniziali = [
-            { id: "46f3H5zXnZ8", title: "Sfera Ebbasta - Visiera A Becco" },
-            { id: "pXq8Lw5_mBA", title: "Shiva, Sfera Ebbasta - Un Milione Di Volte" },
-            { id: "b8_7E9hQv9s", title: "Skinny - Nuova Era" },
-            { id: "3w8YmGZlY8A", title: "Geolier - I P' Me, Tu P' Te" }
+            { id: "46f3H5zXnZ8", title: "Visiera A Becco", artist: "Sfera Ebbasta" },
+            { id: "pXq8Lw5_mBA", title: "Un Milione Di Volte", artist: "Shiva feat. Sfera Ebbasta" },
+            { id: "b8_7E9hQv9s", title: "Nuova Era", artist: "Skinny" },
+            { id: "3w8YmGZlY8A", title: "I P' Me, Tu P' Te", artist: "Geolier" }
         ];
 
-        // Carica i video di default all'avvio
-        function mostraTrend() {
+        function caricaTrend() {
             resultsContainer.innerHTML = "";
-            document.getElementById('section-title').innerText = "Brani di Tendenza";
-            trendIniziali.forEach(video => creaCardVideo(video.id, video.title));
+            document.getElementById('section-title').innerText = "I più ascoltati";
+            trendIniziali.forEach(track => creaCardMixtube(track.id, track.title, track.artist));
         }
-        mostraTrend();
+        caricaTrend();
 
-        // Listener per la ricerca mentre l'utente scrive (Live)
+        // INTERCETTA LA SCRITTURA IN TEMPO REALE
         searchInput.addEventListener('input', () => {
             clearTimeout(timeoutRicerca);
             const query = searchInput.value.trim();
-
-            if (query.length === 0) {
-                mostraTrend();
-                return;
+            
+            // Se svuoti la casella, rimetti automaticamente le tendenze iniziali
+            if (query.length === 0) { 
+                caricaTrend(); 
+                return; 
             }
+            
+            // Inizia a cercare in background non appena l'utente digita almeno 2 lettere
+            if (query.length < 2) return;
 
-            if (query.length < 3) return;
-
-            // Aspetta che l'utente si fermi 500ms prima di inviare la richiesta
-            timeoutRicerca = setTimeout(() => {
-                eseguiRicercaYouTubeLive(query);
-            }, 500);
+            // Debounce di 350ms: aspetta che l'utente si fermi un attimo prima di inviare il comando
+            timeoutRicerca = setTimeout(() => { 
+                eseguiRicercaLiveMixtube(query); 
+            }, 350);
         });
 
-        // Connessione in tempo reale con YouTube tramite proxy pubblico pulito per aggirare i limiti API
-        function eseguiRicercaYouTubeLive(chiave) {
+        function eseguiRicercaLiveMixtube(chiave) {
             document.getElementById('section-title').innerText = "Risultati per: " + chiave;
-            resultsContainer.innerHTML = "<p style='color: #888893;'>Ricerca dei brani su YouTube in corso...</p>";
+            resultsContainer.innerHTML = "<p style='color: var(--text-muted);'>Cerca canali Mixtube in corso...</p>";
 
-            const url = `https://tools.aimylogic.com/api/googlesearch/search?query=site:youtube.com/watch ${encodeURIComponent(chiave)}`;
-
-            fetch(url)
+            // Query pulita al network Invidious (estirpa le pubblicità e genera flussi audio raw)
+            fetch(`https://invidious.projectsegfau.lt/api/v1/search?q=${encodeURIComponent(chiave)}&type=video`)
                 .then(res => res.json())
                 .then(data => {
                     resultsContainer.innerHTML = "";
-                    let videoTrovati = 0;
+                    let trovati = 0;
 
-                    if (data && data.results) {
-                        data.results.forEach(item => {
-                            if (item.url.includes("watch?v=") && videoTrovati < 8) {
-                                try {
-                                    const urlObj = new URL(item.url);
-                                    const videoId = urlObj.searchParams.get("v");
-                                    
-                                    if (videoId) {
-                                        const titoloPulito = item.title.replace(" - YouTube", "");
-                                        creaCardVideo(videoId, titoloPulito);
-                                        videoTrovati++;
-                                    }
-                                } catch (e) {
-                                    console.error("Errore parsing URL:", e);
-                                }
+                    if (Array.isArray(data)) {
+                        data.forEach(item => {
+                            if (trovati < 12) {
+                                // Ottimizzazione titoli: separa la stringa se trova un trattino "Artista - Titolo"
+                                let parti = item.title.split(" - ");
+                                let artista = parti[0] || "Artista";
+                                let titolo = parti[1] || item.title;
+
+                                // Pulisce diciture superflue dai titoli
+                                titolo = titolo.replace(/\(Official Video\)/gi, "").replace(/\[Official Video\]/gi, "");
+
+                                creaCardMixtube(item.videoId, titolo, artista);
+                                trovati++;
                             }
                         });
                     }
-
-                    if (videoTrovati === 0) {
-                        resultsContainer.innerHTML = "<p style='color: #ff2a2a;'>Nessun risultato live trovato. Prova con parole più specifiche.</p>";
+                    if (trovati === 0) {
+                        resultsContainer.innerHTML = "<p style='color: var(--primary);'>Nessun brano trovato con questa parola.</p>";
                     }
                 })
-                .catch(err => {
-                    console.error("Errore di rete durante la ricerca:", err);
-                    resultsContainer.innerHTML = "<p style='color: #ff2a2a;'>Errore di connessione live con i server multimediali.</p>";
+                .catch(() => {
+                    resultsContainer.innerHTML = "<p style='color: var(--primary);'>Sincronizzazione fallita. Riprova.</p>";
                 });
         }
 
-        // Generatore di card video e aggancio riproduttore
-        function creaCardVideo(id, titolo) {
+        // COSTRUZIONE STRUTTURA CARD COMPATTE
+        function creaCardMixtube(id, titolo, artista) {
             const card = document.createElement('div');
-            card.className = 'video-card';
+            card.className = 'track-card';
             card.innerHTML = `
-                <div class="video-thumbnail" style="background-image: url('https://img.youtube.com/vi/${id}/mqdefault.jpg')"></div>
-                <div class="video-info">
-                    <div class="video-title">${titolo}</div>
-                </div>
+                <div class="track-cover" style="background-image: url('https://img.youtube.com/vi/${id}/mqdefault.jpg')"></div>
+                <div class="track-title">${titolo}</div>
+                <div class="track-artist">${artista}</div>
             `;
-            
+
+            // AVVIO FLUSSO AUDIO DIRETTO SENZA PUBBLICITÀ
             card.addEventListener('click', () => {
-                const playerSection = document.getElementById('music-player');
-                const iframe = document.getElementById('yt-iframe');
-                
-                playerSection.style.display = 'flex';
-                iframe.src = `https://www.youtube.com/embed/${id}?autoplay=1&modestbranding=1&rel=0`;
-                
-                document.getElementById('player-title').innerText = titolo;
-                document.getElementById('player-author').innerText = "In riproduzione streaming su Scorpion Pulse";
+                document.getElementById('player-bar').style.display = 'flex';
+                document.getElementById('p-cover').style.backgroundImage = `url('https://img.youtube.com/vi/${id}/mqdefault.jpg')`;
+                document.getElementById('p-title').innerText = titolo;
+                document.getElementById('p-artist').innerText = artista;
+
+                const playerAudio = document.getElementById('audio-player');
+                // itag=140 estrae la traccia audio m4a compressa a 128kbps bypassando il video e i caricamenti commerciali
+                playerAudio.src = `https://invidious.projectsegfau.lt/latest_version?id=${id}&itag=140`;
+                playerAudio.play();
             });
 
             resultsContainer.appendChild(card);

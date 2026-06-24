@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Scorpion Pulse - Mixtube</title>
+    <title>Scorpion Pulse - Global Mixtube</title>
     <style>
         :root {
             --bg-main: #09090b;
@@ -211,7 +211,7 @@
             text-overflow: ellipsis;
         }
 
-        /* PLAYER BAR FISSA IN BASSO */
+        /* PLAYER BAR FISSA IN BASSO (STILE SPOTIFY) */
         .player-bar {
             position: fixed;
             bottom: 0;
@@ -308,11 +308,10 @@
     <!-- CORPO PRINCIPALE -->
     <div class="main-content">
         <div class="search-container">
-            <!-- Input per la ricerca live istantanea -->
-            <input type="text" class="search-bar" id="search-input" placeholder="Scrivi un brano o artista (es. 'stelle')...">
+            <input type="text" class="search-bar" id="search-input" placeholder="Cerca qualsiasi canzone al mondo (es. 'Milly', 'Sfera', 'Pop Smoke')...">
         </div>
 
-        <h2 id="section-title">Brani consigliati</h2>
+        <h2 id="section-title">Classifiche Globali</h2>
         <div class="results-grid" id="results-container"></div>
     </div>
 
@@ -334,119 +333,117 @@
     </div>
 
     <script>
-        // 1. VERIFICA UTENTE LOGGATO VIA FIREBASE
+        // 1. VERIFICA UTENTE CON FIREBASE
         if (typeof auth !== 'undefined') {
             auth.onAuthStateChanged((user) => {
                 if (user) {
                     document.getElementById('display-user').innerText = user.email;
                 } else {
-                    window.location.href = "login.html"; //
+                    window.location.href = "login.html";
                 }
             });
         }
 
         document.getElementById('btn-logout').addEventListener('click', () => {
             if (typeof auth !== 'undefined') {
-                auth.signOut().then(() => { window.location.href = "login.html"; }); //
+                auth.signOut().then(() => { window.location.href = "login.html"; });
             }
         });
 
-        // 2. MOTORE DI RICERCA LIVE ISTANTANEO (SENZA AD)
+        // 2. MOTORE DI RICERCA CON GLOBAL DEEZER API 
         const searchInput = document.getElementById('search-input');
         const resultsContainer = document.getElementById('results-container');
         let timeoutRicerca = null;
 
-        // Lista di default all'apertura del sito
-        const trendIniziali = [
-            { id: "46f3H5zXnZ8", title: "Visiera A Becco", artist: "Sfera Ebbasta" },
-            { id: "pXq8Lw5_mBA", title: "Un Milione Di Volte", artist: "Shiva feat. Sfera Ebbasta" },
-            { id: "b8_7E9hQv9s", title: "Nuova Era", artist: "Skinny" },
-            { id: "3w8YmGZlY8A", title: "I P' Me, Tu P' Te", artist: "Geolier" }
-        ];
+        // Tracce globali mostrate di default usando una fetch sulla top-chart italiana/global
+        function caricaTopTracks() {
+            resultsContainer.innerHTML = "<p style='color: var(--text-muted);'>Caricamento classifiche...</p>";
+            document.getElementById('section-title').innerText = "Classifiche del momento";
 
-        function caricaTrend() {
-            resultsContainer.innerHTML = "";
-            document.getElementById('section-title').innerText = "I più ascoltati";
-            trendIniziali.forEach(track => creaCardMixtube(track.id, track.title, track.artist));
+            // Chiamata JSONP o Proxy per bypassare i blocchi CORS dell'API Deezer
+            fetch(`https://api.allorigins.win/get?url=${encodeURIComponent('https://api.deezer.com/chart/0/tracks&limit=12')}`)
+                .then(res => res.json())
+                .then(data => {
+                    const parsedData = JSON.parse(data.contents);
+                    resultsContainer.innerHTML = "";
+                    if(parsedData && parsedData.data) {
+                        parsedData.data.forEach(track => {
+                            creaCardMixtube(track.preview, track.title, track.artist.name, track.album.cover_medium);
+                        });
+                    }
+                })
+                .catch(() => {
+                    resultsContainer.innerHTML = "<p style='color: var(--primary);'>Errore nel caricamento delle classifiche.</p>";
+                });
         }
-        caricaTrend();
+        caricaTopTracks();
 
-        // INTERCETTA LA SCRITTURA IN TEMPO REALE
+        // INTERCETTAZIONE LIVE DIGITAZIONE
         searchInput.addEventListener('input', () => {
             clearTimeout(timeoutRicerca);
             const query = searchInput.value.trim();
             
-            // Se svuoti la casella, rimetti automaticamente le tendenze iniziali
             if (query.length === 0) { 
-                caricaTrend(); 
+                caricaTopTracks(); 
                 return; 
             }
             
-            // Inizia a cercare in background non appena l'utente digita almeno 2 lettere
             if (query.length < 2) return;
 
-            // Debounce di 350ms: aspetta che l'utente si fermi un attimo prima di inviare il comando
             timeoutRicerca = setTimeout(() => { 
-                eseguiRicercaLiveMixtube(query); 
+                eseguiRicercaGlobaleDeezer(query); 
             }, 350);
         });
 
-        function eseguiRicercaLiveMixtube(chiave) {
+        function eseguiRicercaGlobaleDeezer(chiave) {
             document.getElementById('section-title').innerText = "Risultati per: " + chiave;
-            resultsContainer.innerHTML = "<p style='color: var(--text-muted);'>Cerca canali Mixtube in corso...</p>";
+            resultsContainer.innerHTML = "<p style='color: var(--text-muted);'>Ricerca nel database mondiale...</p>";
 
-            // Query pulita al network Invidious (estirpa le pubblicità e genera flussi audio raw)
-            fetch(`https://invidious.projectsegfau.lt/api/v1/search?q=${encodeURIComponent(chiave)}&type=video`)
+            // Sfrutta l'endpoint globale di Deezer per trovare qualsiasi traccia esistente
+            fetch(`https://api.allorigins.win/get?url=${encodeURIComponent('https://api.deezer.com/search?q=' + chiave + '&limit=20')}`)
                 .then(res => res.json())
                 .then(data => {
+                    const parsedData = JSON.parse(data.contents);
                     resultsContainer.innerHTML = "";
-                    let trovati = 0;
+                    let contatore = 0;
 
-                    if (Array.isArray(data)) {
-                        data.forEach(item => {
-                            if (trovati < 12) {
-                                // Ottimizzazione titoli: separa la stringa se trova un trattino "Artista - Titolo"
-                                let parti = item.title.split(" - ");
-                                let artista = parti[0] || "Artista";
-                                let titolo = parti[1] || item.title;
-
-                                // Pulisce diciture superflue dai titoli
-                                titolo = titolo.replace(/\(Official Video\)/gi, "").replace(/\[Official Video\]/gi, "");
-
-                                creaCardMixtube(item.videoId, titolo, artista);
-                                trovati++;
+                    if (parsedData && parsedData.data) {
+                        parsedData.data.forEach(track => {
+                            // Verifica che esista l'anteprima audio funzionante
+                            if(track.preview) {
+                                creaCardMixtube(track.preview, track.title, track.artist.name, track.album.cover_medium);
+                                contatore++;
                             }
                         });
                     }
-                    if (trovati === 0) {
-                        resultsContainer.innerHTML = "<p style='color: var(--primary);'>Nessun brano trovato con questa parola.</p>";
+                    if (contatore === 0) {
+                        resultsContainer.innerHTML = "<p style='color: var(--primary);'>Nessun brano trovato. Controlla il nome!</p>";
                     }
                 })
                 .catch(() => {
-                    resultsContainer.innerHTML = "<p style='color: var(--primary);'>Sincronizzazione fallita. Riprova.</p>";
+                    resultsContainer.innerHTML = "<p style='color: var(--primary);'>Errore di connessione con l'API musicale.</p>";
                 });
         }
 
-        // COSTRUZIONE STRUTTURA CARD COMPATTE
-        function creaCardMixtube(id, titolo, artista) {
+        // COSTRUZIONE STRUTTURA CARD CON COPERTINE REALI DI DEEZER
+        function creaCardMixtube(audioUrl, titolo, artista, copertinaUrl) {
             const card = document.createElement('div');
             card.className = 'track-card';
             card.innerHTML = `
-                <div class="track-cover" style="background-image: url('https://img.youtube.com/vi/${id}/mqdefault.jpg')"></div>
+                <div class="track-cover" style="background-image: url('${copertinaUrl}')"></div>
                 <div class="track-title">${titolo}</div>
                 <div class="track-artist">${artista}</div>
             `;
 
-            // AVVIO FLUSSO AUDIO DIRETTO SENZA PUBBLICITÀ
+            // EVENTO DI RIPRODUZIONE AUDIO INTEGRATO DIRETTAMENTE SENZA AD
             card.addEventListener('click', () => {
                 document.getElementById('player-bar').style.display = 'flex';
-                document.getElementById('p-cover').style.backgroundImage = `url('https://img.youtube.com/vi/${id}/mqdefault.jpg')`;
+                document.getElementById('p-cover').style.backgroundImage = `url('${copertinaUrl}')`;
                 document.getElementById('p-title').innerText = titolo;
                 document.getElementById('p-artist').innerText = artista;
 
                 const playerAudio = document.getElementById('audio-player');
-                // itag=140 estrae la traccia audio m4a compressa a 128kbps bypassando il video e i caricamenti commerciali
-                playerAudio.src = `https://invidious.projectsegfau.lt/latest_version?id=${id}&itag=140`;
+                playerAudio.src = audioUrl;
                 playerAudio.play();
             });
 

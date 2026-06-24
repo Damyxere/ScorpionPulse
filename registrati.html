@@ -1,4 +1,4 @@
-   <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="it">
 <head>
     <meta charset="UTF-8">
@@ -50,25 +50,9 @@
             letter-spacing: 1px;
         }
 
-        .subtitle {
-            color: var(--text-muted);
-            font-size: 0.95rem;
-            margin-bottom: 30px;
-        }
-
-        .input-group {
-            text-align: left;
-            margin-bottom: 18px;
-        }
-
-        .input-group label {
-            display: block;
-            font-size: 0.85rem;
-            color: #aaa;
-            margin-bottom: 6px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
+        .subtitle { color: var(--text-muted); font-size: 0.95rem; margin-bottom: 30px; }
+        .input-group { text-align: left; margin-bottom: 18px; }
+        .input-group label { display: block; font-size: 0.85rem; color: #aaa; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
 
         input { 
             width: 100%; 
@@ -154,17 +138,11 @@
         
         .error-msg { color: var(--primary); font-size: 0.85rem; margin-top: 6px; display: none; font-weight: 500; }
         .success-msg { color: #00cc66; font-size: 0.85rem; margin-top: 6px; display: none; font-weight: 500; }
-
-        @media (max-width: 480px) {
-            body { padding: 10px; }
-            .auth-card { padding: 30px 20px; border: none; background: transparent; box-shadow: none; }
-        }
     </style>
 
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-
     <script src="firebase-loader.js"></script>
 </head>
 <body>
@@ -205,8 +183,7 @@
     </div>
 
     <script>
-        console.log("Script Scorpion Pulse avviato correttamente!");
-        
+        console.log("Script Registrazione Scorpion Pulse Pronto.");
         const usernameInput = document.getElementById('reg-username');
         const passwordInput = document.getElementById('reg-password');
         const errorDiv = document.getElementById('username-error');
@@ -215,94 +192,70 @@
         const form = document.getElementById('register-form');
         const googleBtn = document.getElementById('btn-google-click');
 
-        // Controlli diagnostici iniziali
-        if (!form) console.error("❌ Errore: Manca l'elemento 'register-form' nell'HTML!");
-        if (!googleBtn) console.error("❌ Errore: Manca l'elemento 'btn-google-click' nell'HTML!");
+        // Barra robustezza password
+        passwordInput.addEventListener('input', () => {
+            const val = passwordInput.value;
+            if (val.length === 0) { barra.style.width = "0%"; } 
+            else if (val.length < 6) { barra.style.background = "#ff2a2a"; barra.style.width = "33%"; } 
+            else if (val.length >= 6 && val.length < 10) { barra.style.background = "#ff7300"; barra.style.width = "66%"; } 
+            else { barra.style.background = "#00cc66"; barra.style.width = "100%"; }
+        });
 
-        // 1. REATTIVITÀ BARRA PASSWORD
-        if (passwordInput && barra) {
-            passwordInput.addEventListener('input', () => {
-                const val = passwordInput.value;
-                if (val.length === 0) { barra.style.width = "0%"; } 
-                else if (val.length < 6) { barra.style.background = "#ff2a2a"; barra.style.width = "33%"; } 
-                else if (val.length >= 6 && val.length < 10) { barra.style.background = "#ff7300"; barra.style.width = "66%"; } 
-                else { barra.style.background = "#00cc66"; barra.style.width = "100%"; }
-            });
-        }
+        // Verifica username real-time
+        usernameInput.addEventListener('input', () => {
+            const username = usernameInput.value.trim().toLowerCase();
+            if (username.length < 3) { 
+                errorDiv.style.display = "none"; 
+                successDiv.style.display = "none"; 
+                return; 
+            }
 
-        // 2. LOGICA CONTROLLO USERNAME IN REAL-TIME SU FIRESTORE
-        if (usernameInput) {
-            usernameInput.addEventListener('input', () => {
-                const username = usernameInput.value.trim().toLowerCase();
-                if (username.length < 3) { 
-                    if(errorDiv) errorDiv.style.display = "none"; 
-                    if(successDiv) successDiv.style.display = "none"; 
-                    return; 
-                }
+            db.collection("users").where("username", "==", username).get()
+                .then((querySnapshot) => {
+                    if (!querySnapshot.empty) {
+                        errorDiv.style.display = "block"; successDiv.style.display = "none";
+                    } else {
+                        errorDiv.style.display = "none"; successDiv.style.display = "block";
+                    }
+                }).catch((err) => { console.error(err); });
+        });
 
-                console.log("Controllo database per l'username: " + username);
-                db.collection("users").where("username", "==", username).get()
-                    .then((querySnapshot) => {
-                        if (!querySnapshot.empty) {
-                            if(errorDiv) errorDiv.style.display = "block"; 
-                            if(successDiv) successDiv.style.display = "none";
-                        } else {
-                            if(errorDiv) errorDiv.style.display = "none"; 
-                            if(successDiv) successDiv.style.display = "block";
-                        }
-                    }).catch((err) => { console.error("Errore lettura database: ", err); });
-            });
-        }
+        // Invio dei dati a Firebase Auth e Firestore
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const username = usernameInput.value.trim().toLowerCase();
+            const email = document.getElementById('reg-email').value;
+            const password = passwordInput.value;
 
-        // 3. LOGICA DI INVIO FORM E SALVATAGGIO DATI UTENTE
-        if (form) {
-            form.addEventListener('submit', (e) => {
-                e.preventDefault();
-                console.log("Tentativo di invio form avviato.");
+            if (errorDiv.style.display === "block") { 
+                alert("L'username scelto è occupato!"); 
+                return; 
+            }
 
-                const username = usernameInput.value.trim().toLowerCase();
-                const email = document.getElementById('reg-email').value;
-                const password = passwordInput.value;
-
-                if (errorDiv && errorDiv.style.display === "block") { 
-                    alert("L'username scelto è già registrato!"); 
-                    return; 
-                }
-
-                auth.createUserWithEmailAndPassword(email, password)
-                    .then((userCredential) => {
-                        console.log("Autenticazione passata. Generazione documento su Firestore...");
-                        return db.collection("users").doc(userCredential.user.uid).set({
-                            username: username,
-                            email: email,
-                            searchHistory: [],
-                            likedVideos: []
-                        });
-                    })
-                    .then(() => {
-                        alert("Registrazione effettuata con successo!");
-                        window.location.href = "login.html";
-                    })
-                    .catch((error) => { 
-                        console.error(error);
-                        alert("Errore Firebase: " + error.message); 
+            auth.createUserWithEmailAndPassword(email, password)
+                .then((userCredential) => {
+                    return db.collection("users").doc(userCredential.user.uid).set({
+                        username: username,
+                        email: email,
+                        searchHistory: [],
+                        likedVideos: []
                     });
-            });
-        }
+                })
+                .then(() => {
+                    alert("Registrazione completata!");
+                    window.location.href = "login.html";
+                })
+                .catch((error) => { alert("Errore: " + error.message); });
+        });
 
-        // 4. ACCESSO RAPIDO GOOGLE AUTH
-        if (googleBtn) {
-            googleBtn.addEventListener('click', () => {
-                console.log("Apertura popup Google Auth in corso...");
-                auth.signInWithPopup(provider)
-                    .then((result) => {
-                        localStorage.setItem("usernameUtente", result.user.displayName);
-                        window.location.href = "index.html";
-                    }).catch((err) => { 
-                        console.warn("Chiusura o blocco della finestra popup: ", err.message); 
-                    });
-            });
-        }
+        // Registrazione Rapida Google
+        googleBtn.addEventListener('click', () => {
+            auth.signInWithPopup(provider)
+                .then((result) => {
+                    localStorage.setItem("usernameUtente", result.user.displayName);
+                    window.location.href = "index.html";
+                }).catch((err) => { console.warn(err.message); });
+        });
     </script>
 </body>
 </html>

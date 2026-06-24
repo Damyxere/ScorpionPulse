@@ -131,7 +131,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     
-    <script src="firebase-loader.js"></script>
+    <script src="firebase-loader.js?v=2"></script>
 </head>
 <body>
 
@@ -163,7 +163,7 @@
     </div>
 
     <script>
-        console.log("Interfaccia di Login pronta.");
+        console.log("Script Login Attivo.");
         const loginForm = document.getElementById('login-form');
         const googleBtn = document.getElementById('btn-google-login');
 
@@ -172,7 +172,7 @@
                 e.preventDefault();
                 
                 if (typeof auth === 'undefined') {
-                    alert("Errore di inizializzazione.");
+                    alert("Errore critico di inizializzazione.");
                     return;
                 }
 
@@ -186,7 +186,7 @@
                     })
                     .catch((err) => { 
                         console.error(err);
-                        alert("Credenziali non valide. Controlla e riprova."); 
+                        alert("Errore d'accesso: controlla i tuoi dati."); 
                     });
             });
         }

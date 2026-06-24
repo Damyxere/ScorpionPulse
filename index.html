@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Scorpion Pulse - Global Mixtube</title>
+    <title>Scorpion Pulse - Ultimate Mixtube</title>
     <style>
         :root {
             --bg-main: #09090b;
@@ -28,7 +28,7 @@
             overflow: hidden;
         }
 
-        /* SIDEBAR IN STILE MIXTUBE */
+        /* SIDEBAR */
         .sidebar {
             width: 240px;
             background: var(--bg-sidebar);
@@ -75,6 +75,7 @@
             display: flex;
             align-items: center;
             gap: 12px;
+            width: 100%;
         }
 
         .menu-btn:hover, .menu-btn.active {
@@ -131,7 +132,6 @@
             box-sizing: border-box;
         }
 
-        /* BARRA DI RICERCA */
         .search-container {
             margin-bottom: 32px;
             max-width: 600px;
@@ -163,7 +163,7 @@
             margin: 0 0 20px 0;
         }
 
-        /* GRIGLIA BRANI MIXTUBE STYLE */
+        /* GRIGLIA BRANI */
         .results-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
@@ -177,6 +177,7 @@
             border: 1px solid var(--border);
             cursor: pointer;
             transition: all 0.25s ease;
+            position: relative;
         }
 
         .track-card:hover {
@@ -201,6 +202,7 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            padding-right: 24px;
         }
 
         .track-artist {
@@ -211,7 +213,29 @@
             text-overflow: ellipsis;
         }
 
-        /* PLAYER BAR FISSA IN BASSO (STILE SPOTIFY) */
+        /* BOTTONE LIKE */
+        .like-btn {
+            position: absolute;
+            bottom: 16px;
+            right: 16px;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: color 0.2s, transform 0.1s;
+            z-index: 10;
+        }
+
+        .like-btn:hover {
+            transform: scale(1.2);
+        }
+
+        .like-btn.liked {
+            color: var(--primary);
+        }
+
+        /* PLAYER BAR */
         .player-bar {
             position: fixed;
             bottom: 0;
@@ -280,7 +304,7 @@
         }
     </style>
 
-    <!-- FIREBASE COMPAT LIBRARIES -->
+    <!-- FIREBASE LIBRARIES -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
@@ -293,9 +317,8 @@
         <div>
             <div class="brand">🦂 Scorpion<span>Pulse</span></div>
             <div class="menu-group">
-                <button class="menu-btn active">🎵 Dashboard</button>
-                <button class="menu-btn">🔥 Trap & Drill</button>
-                <button class="menu-btn">💜 Preferiti</button>
+                <button class="menu-btn active" id="menu-dashboard">🎵 Dashboard</button>
+                <button class="menu-btn" id="menu-favorites">💜 Preferiti</button>
             </div>
         </div>
 
@@ -307,15 +330,15 @@
 
     <!-- CORPO PRINCIPALE -->
     <div class="main-content">
-        <div class="search-container">
-            <input type="text" class="search-bar" id="search-input" placeholder="Cerca canzoni o artisti (es. 'stelle', 'Sfera', 'Shiva')...">
+        <div class="search-container" id="search-box-wrapper">
+            <input type="text" class="search-bar" id="search-input" placeholder="Cerca canzoni o artisti (es. 'Milly', 'Shiva', 'Sfera')...">
         </div>
 
         <h2 id="section-title">Classifiche Globali</h2>
         <div class="results-grid" id="results-container"></div>
     </div>
 
-    <!-- AUDIO PLAYER CONTROLS IN BASSO -->
+    <!-- AUDIO PLAYER FISSO -->
     <div class="player-bar" id="player-bar">
         <div class="player-track-info">
             <div class="player-mini-cover" id="p-cover"></div>
@@ -333,11 +356,16 @@
     </div>
 
     <script>
-        // 1. VERIFICA UTENTE CON FIREBASE
+        let utenteCorrente = null;
+        let preferitiIds = [];
+
+        // 1. CONF FIREBASE USER
         if (typeof auth !== 'undefined') {
             auth.onAuthStateChanged((user) => {
                 if (user) {
+                    utenteCorrente = user;
                     document.getElementById('display-user').innerText = user.email;
+                    caricaPreferitiUtente();
                 } else {
                     window.location.href = "login.html";
                 }
@@ -350,41 +378,35 @@
             }
         });
 
-        // 2. MOTORE DI RICERCA CON PROXY STABILE ED EFFECCIATO
         const searchInput = document.getElementById('search-input');
         const resultsContainer = document.getElementById('results-container');
         let timeoutRicerca = null;
+        let modalitaCorrente = "dashboard";
 
-        // Caricamento iniziale di tracce di tendenza stabili senza crash
+        // Carica la Top Chart Mondiale iniziale da Deezer
         function caricaTopTracks() {
+            if (modalitaCorrente !== "dashboard") return;
             resultsContainer.innerHTML = "<p style='color: var(--text-muted);'>Caricamento tracce...</p>";
             document.getElementById('section-title').innerText = "In Evidenza su Scorpion Pulse";
 
-            // Utilizzo di un proxy CORS dedicato e veloce
             const urlDeezer = "https://api.deezer.com/chart/0/tracks&limit=12";
             fetch("https://corsproxy.io/?" + encodeURIComponent(urlDeezer))
                 .then(res => res.json())
                 .then(parsedData => {
+                    if (modalitaCorrente !== "dashboard") return;
                     resultsContainer.innerHTML = "";
                     if(parsedData && parsedData.data) {
                         parsedData.data.forEach(track => {
-                            creaCardMixtube(track.preview, track.title, track.artist.name, track.album.cover_medium);
+                            creaCardMixtube(track.id, track.title, track.artist.name, track.album.cover_medium);
                         });
                     }
                 })
                 .catch(() => {
-                    // Sistema di ripiego d'emergenza se i server proxy falliscono temporaneamente
-                    resultsContainer.innerHTML = "";
-                    const backupTracks = [
-                        { preview: "https://cdns-preview-c.dzcdn.net/stream/c-c8347f3b8f1e680a6d05f3bf6ca12bc6-4.mp3", title: "Visiera A Becco", artist: "Sfera Ebbasta", cover: "https://api.deezer.com/album/14742614/image" },
-                        { preview: "https://cdns-preview-d.dzcdn.net/stream/c-d3c267b14fd95cd283f3e69188e89f6d-3.mp3", title: "Stelle", artist: "Shiva feat. Sfera Ebbasta", cover: "https://api.deezer.com/album/376223967/image" }
-                    ];
-                    backupTracks.forEach(t => creaCardMixtube(t.preview, t.title, t.artist, t.cover));
+                    resultsContainer.innerHTML = "<p style='color: var(--primary);'>Errore di sincronizzazione.</p>";
                 });
         }
-        caricaTopTracks();
 
-        // LOGICA LIVE SEARCH AGGIORNATA
+        // DEBOUNCE DI RICERCA LIVE (DEEZER ENGINE)
         searchInput.addEventListener('input', () => {
             clearTimeout(timeoutRicerca);
             const query = searchInput.value.trim();
@@ -393,17 +415,18 @@
                 caricaTopTracks(); 
                 return; 
             }
-            
             if (query.length < 2) return;
 
             timeoutRicerca = setTimeout(() => { 
-                eseguiRicercaGlobaleDeezer(query); 
+                if(modalitaCorrente === "dashboard") {
+                    eseguiRicercaGlobaleDeezer(query); 
+                }
             }, 300);
         });
 
         function eseguiRicercaGlobaleDeezer(chiave) {
             document.getElementById('section-title').innerText = "Risultati per: " + chiave;
-            resultsContainer.innerHTML = "<p style='color: var(--text-muted);'>Cerca nel database mondiale...</p>";
+            resultsContainer.innerHTML = "<p style='color: var(--text-muted);'>Analisi database globale...</p>";
 
             const urlSearch = `https://api.deezer.com/search?q=${encodeURIComponent(chiave)}&limit=24`;
 
@@ -412,61 +435,169 @@
                 .then(parsedData => {
                     resultsContainer.innerHTML = "";
                     let contatore = 0;
-
                     if (parsedData && parsedData.data) {
                         parsedData.data.forEach(track => {
-                            if(track.preview) {
-                                creaCardMixtube(track.preview, track.title, track.artist.name, track.album.cover_medium);
-                                contatore++;
-                            }
+                            creaCardMixtube(track.id, track.title, track.artist.name, track.album.cover_medium);
+                            contatore++;
                         });
                     }
                     if (contatore === 0) {
-                        resultsContainer.innerHTML = "<p style='color: var(--primary);'>Nessun brano trovato. Prova a scrivere in modo diverso!</p>";
+                        resultsContainer.innerHTML = "<p style='color: var(--primary);'>Nessun brano trovato.</p>";
                     }
-                })
-                .catch(() => {
-                    // Secondo tentativo d'emergenza via proxy AllOrigins se corsproxy ha problemi
-                    fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(urlSearch)}`)
-                        .then(res => res.json())
-                        .then(response => {
-                            const parsedData = JSON.parse(response.contents);
-                            resultsContainer.innerHTML = "";
-                            if (parsedData && parsedData.data) {
-                                parsedData.data.forEach(track => {
-                                    creaCardMixtube(track.preview, track.title, track.artist.name, track.album.cover_medium);
-                                });
-                            }
-                        })
-                        .catch(() => {
-                            resultsContainer.innerHTML = "<p style='color: var(--primary);'>Errore di connessione. Riprova tra un istante.</p>";
-                        });
                 });
         }
 
-        // COSTRUZIONE STRUTTURA CARD
-        function creaCardMixtube(audioUrl, titolo, artista, copertinaUrl) {
+        // COSTRUZIONE CARD
+        function creaCardMixtube(id, titolo, artista, copertinaUrl) {
             const card = document.createElement('div');
             card.className = 'track-card';
+            
+            const isLiked = preferitiIds.includes(String(id));
+            const cuoreClasse = isLiked ? "liked" : "";
+            const cuoreIcona = isLiked ? "💜" : "🤍";
+
             card.innerHTML = `
                 <div class="track-cover" style="background-image: url('${copertinaUrl}')"></div>
                 <div class="track-title">${titolo}</div>
                 <div class="track-artist">${artista}</div>
+                <button class="like-btn ${cuoreClasse}" data-id="${id}">${cuoreIcona}</button>
             `;
 
-            card.addEventListener('click', () => {
+            // STREAMING FULL AUDIO BRANO BYPASSANDO I LIMITI DI DEEZER VIA YOUTUBE/INVIDIOUS
+            card.addEventListener('click', (e) => {
+                if (e.target.classList.contains('like-btn')) return;
+
+                // Mostra il player e aggiorna i dettagli grafici al volo
                 document.getElementById('player-bar').style.display = 'flex';
                 document.getElementById('p-cover').style.backgroundImage = `url('${copertinaUrl}')`;
                 document.getElementById('p-title').innerText = titolo;
                 document.getElementById('p-artist').innerText = artista;
 
                 const playerAudio = document.getElementById('audio-player');
-                playerAudio.src = audioUrl;
-                playerAudio.play();
+                
+                // Cerca la traccia su Invidious usando la combinazione esatta "Artista - Titolo"
+                const chiaveRicercaYoutube = `${artista} ${titolo}`;
+                
+                fetch(`https://invidious.projectsegfau.lt/api/v1/search?q=${encodeURIComponent(chiaveRicercaYoutube)}&type=video`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (Array.isArray(data) && data.length > 0) {
+                            const videoId = data[0].videoId; // Prende il primo risultato più rilevante
+                            // Estrae direttamente l'audio m4a e lo lancia nel player
+                            playerAudio.src = `https://invidious.projectsegfau.lt/latest_version?id=${videoId}&itag=140`;
+                            playerAudio.play();
+                        } else {
+                            alert("Impossibile caricare il flusso audio completo per questo brano.");
+                        }
+                    })
+                    .catch(() => {
+                        console.error("Errore nel recupero della sorgente audio.");
+                    });
+            });
+
+            const btnLike = card.querySelector('.like-btn');
+            btnLike.addEventListener('click', (e) => {
+                e.stopPropagation();
+                gestisciLikeBrano(id, titolo, artista, copertinaUrl, btnLike);
             });
 
             resultsContainer.appendChild(card);
         }
+
+        // GESTIONE DATABASE PREFERITI
+        function caricaPreferitiUtente() {
+            if (!window.db || !utenteCorrente) return;
+
+            db.collection("users").doc(utenteCorrente.uid).collection("favorites")
+                .onSnapshot((snapshot) => {
+                    preferitiIds = [];
+                    snapshot.forEach(doc => {
+                        preferitiIds.push(String(doc.id));
+                    });
+                    
+                    if (modalitaCorrente === "preferiti") {
+                        mostraSchermataPreferiti();
+                    } else {
+                        document.querySelectorAll('.like-btn').forEach(btn => {
+                            const id = String(btn.getAttribute('data-id'));
+                            if (preferitiIds.includes(id)) {
+                                btn.classList.add('liked');
+                                btn.innerText = "💜";
+                            } else {
+                                btn.classList.remove('liked');
+                                btn.innerText = "🤍";
+                            }
+                        });
+                    }
+                });
+        }
+
+        function gestisciLikeBrano(id, titolo, artista, copertinaUrl, bottone) {
+            if (!utenteCorrente || !window.db) return;
+            const docRef = db.collection("users").doc(utenteCorrente.uid).collection("favorites").doc(String(id));
+
+            if (preferitiIds.includes(String(id))) {
+                docRef.delete().then(() => {
+                    bottone.classList.remove('liked');
+                    bottone.innerText = "🤍";
+                });
+            } else {
+                docRef.set({
+                    id: id,
+                    title: titolo,
+                    artist: artista,
+                    coverUrl: copertinaUrl,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                }).then(() => {
+                    bottone.classList.add('liked');
+                    bottone.innerText = "💜";
+                });
+            }
+        }
+
+        function mostraSchermataPreferiti() {
+            document.getElementById('section-title').innerText = "I tuoi brani Preferiti 💜";
+            resultsContainer.innerHTML = "";
+
+            if (preferitiIds.length === 0) {
+                resultsContainer.innerHTML = "<p style='color: var(--text-muted);'>Lista preferiti vuota.</p>";
+                return;
+            }
+
+            db.collection("users").doc(utenteCorrente.uid).collection("favorites").orderBy("timestamp", "desc")
+                .get()
+                .then(snapshot => {
+                    if (modalitaCorrente !== "preferiti") return;
+                    resultsContainer.innerHTML = "";
+                    snapshot.forEach(doc => {
+                        const data = doc.data();
+                        creaCardMixtube(data.id, data.title, data.artist, data.coverUrl);
+                    });
+                });
+        }
+
+        // NAVIGAZIONE INTERFACCIA
+        const btnDashboard = document.getElementById('menu-dashboard');
+        const btnFavorites = document.getElementById('menu-favorites');
+        const searchBoxWrapper = document.getElementById('search-box-wrapper');
+
+        btnDashboard.addEventListener('click', () => {
+            modalitaCorrente = "dashboard";
+            btnFavorites.classList.remove('active');
+            btnDashboard.classList.add('active');
+            searchBoxWrapper.style.display = "block";
+            caricaTopTracks();
+        });
+
+        btnFavorites.addEventListener('click', () => {
+            modalitaCorrente = "preferiti";
+            btnDashboard.classList.remove('active');
+            btnFavorites.classList.add('active');
+            searchBoxWrapper.style.display = "none";
+            mostraSchermataPreferiti();
+        });
+
+        setTimeout(() => { caricaTopTracks(); }, 1000);
     </script>
 </body>
 </html>

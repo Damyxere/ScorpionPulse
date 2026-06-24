@@ -3,294 +3,372 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Scorpion Pulse - Player</title>
+    <title>Scorpion Pulse - Mixtube Dashboard</title>
     <style>
         :root {
             --bg-color: #070708;
-            --card-bg: #121214;
+            --sidebar-bg: #121214;
+            --card-bg: #1a1a1e;
             --primary: #ff2a2a;
             --primary-hover: #cc0000;
             --border: #222226;
             --text-muted: #888893;
         }
 
-        body { 
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; 
-            background: var(--bg-color); 
-            color: white; 
-            margin: 0; 
-            padding: 0; 
-            display: flex; 
-            height: 100vh; 
-            overflow: hidden; 
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-color);
+            color: white;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
         }
 
-        .sidebar { 
-            width: 280px; 
-            background: var(--card-bg); 
-            border-right: 1px solid var(--border); 
-            padding: 20px; 
-            display: flex; 
-            flex-direction: column; 
-            justify-content: space-between; 
-            box-sizing: border-box; 
+        /* BARRA LATERALE (SIDEBAR) */
+        .sidebar {
+            width: 260px;
+            background: var(--sidebar-bg);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 20px;
+            box-sizing: border-box;
         }
 
-        .main-panel { 
-            flex: 1; 
-            padding: 30px; 
-            overflow-y: auto; 
-            box-sizing: border-box; 
-            background-image: radial-gradient(circle at bottom right, rgba(255, 42, 42, 0.03), transparent 50%);
-        }
-
-        .brand { 
-            font-size: 1.6rem; 
-            font-weight: 900; 
-            background: linear-gradient(45deg, #ff2a2a, #ff7300); 
-            -webkit-background-clip: text; 
-            -webkit-text-fill-color: transparent; 
-            margin-bottom: 30px; 
+        .brand {
+            font-size: 1.6rem;
+            font-weight: 900;
+            background: linear-gradient(45deg, #ff2a2a, #ff7300);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
             letter-spacing: 1px;
+            margin-bottom: 30px;
+            text-align: center;
         }
 
-        .nav-section h3 { 
-            font-size: 0.8rem; 
-            color: #55555f; 
-            text-transform: uppercase; 
-            margin-bottom: 12px; 
-            letter-spacing: 1px;
+        .menu-items {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
         }
 
-        .nav-list { list-style: none; padding: 0; margin: 0; }
-        .nav-list li { 
-            padding: 12px; 
-            color: #aaa; 
-            border-radius: 8px; 
-            cursor: pointer; 
-            transition: all 0.2s; 
-            margin-bottom: 6px; 
-            font-weight: 500;
+        .menu-btn {
+            background: transparent;
+            color: #aaa;
+            border: none;
+            padding: 12px 15px;
+            border-radius: 8px;
+            text-align: left;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 600;
         }
-        .nav-list li:hover { background: #1a1a1f; color: white; }
 
-        .user-tag { 
-            background: #1a1a1f; 
-            padding: 14px; 
-            border-radius: 10px; 
-            border: 1px solid var(--border); 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
+        .menu-btn:hover, .menu-btn.active {
+            background: rgba(255, 42, 42, 0.1);
+            color: var(--primary);
         }
-        
-        #label-user {
-            font-size: 0.9rem;
-            color: #ccc;
-            white-space: nowrap;
+
+        .user-profile {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            text-align: center;
+        }
+
+        .user-name {
+            font-size: 0.95rem;
+            font-weight: bold;
+            margin-bottom: 10px;
             overflow: hidden;
             text-overflow: ellipsis;
-            max-width: 140px;
+            white-space: nowrap;
         }
 
-        .btn-logout { 
-            background: transparent; 
-            border: none; 
-            color: var(--primary); 
-            font-weight: bold; 
-            cursor: pointer; 
-            font-size: 0.9rem;
-            transition: color 0.2s;
-        }
-        .btn-logout:hover { color: #ff5555; }
-
-        .search-box { display: flex; gap: 12px; margin-bottom: 35px; }
-        
-        input { 
-            flex: 1; 
-            padding: 14px; 
-            border-radius: 8px; 
-            border: 1px solid var(--border); 
-            background: #121214; 
-            color: white; 
-            font-size: 1rem; 
-            transition: border-color 0.2s;
-        }
-        input:focus { border-color: var(--primary); outline: none; }
-
-        .btn-search { 
-            padding: 0 30px; 
-            background: var(--primary); 
-            color: white; 
-            border: none; 
-            border-radius: 8px; 
-            cursor: pointer; 
-            font-weight: bold; 
-            font-size: 1rem;
+        .logout-btn {
+            background: #ff2a2a;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.85rem;
+            width: 100%;
             transition: background 0.2s;
         }
-        .btn-search:hover { background: var(--primary-hover); }
 
-        #player-zone { 
-            background: #121214; 
-            min-height: 250px; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            border-radius: 16px; 
-            border: 1px solid var(--border); 
-            margin-bottom: 35px; 
-            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
-        }
-        
-        #placeholder-testo { color: var(--text-muted); font-size: 1rem; }
+        .logout-btn:hover { background: var(--primary-hover); }
 
-        .traccia-card { 
-            background: #121214; 
-            padding: 16px; 
-            margin-bottom: 12px; 
-            border-radius: 10px; 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            border: 1px solid var(--border); 
-            transition: border-color 0.2s;
-        }
-        .traccia-card:hover { border-color: #333339; }
-
-        .btn-play { 
-            background: #00cc66; 
-            color: white; 
-            border: none; 
-            padding: 10px 20px; 
-            border-radius: 6px; 
-            font-weight: bold; 
-            cursor: pointer; 
-            transition: background 0.2s;
-        }
-        .btn-play:hover { background: #00994d; }
-
-        /* Copertura di caricamento */
-        #loading-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--bg-color); z-index: 9999; display: flex;
-            justify-content: center; align-items: center; font-weight: bold;
-            font-size: 1.2rem; letter-spacing: 1px;
+        /* CONTENUTO PRINCIPALE */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 30px;
+            overflow-y: auto;
+            box-sizing: border-box;
         }
 
-        @media (max-width: 768px) {
-            body { flex-direction: column; overflow-y: auto; height: auto; }
-            .sidebar { width: 100%; height: auto; border-right: none; border-bottom: 1px solid var(--border); gap: 20px; }
-            .main-panel { height: auto; overflow: visible; padding: 20px; }
+        /* BARRA DI RICERCA LIVE STYLE MIXTUBE */
+        .search-container {
+            margin-bottom: 30px;
+            position: relative;
         }
+
+        .search-bar {
+            width: 100%;
+            padding: 16px 20px;
+            background: var(--sidebar-bg);
+            border: 1px solid var(--border);
+            border-radius: 30px;
+            color: white;
+            font-size: 1.1rem;
+            box-sizing: border-box;
+            transition: all 0.3s ease;
+        }
+
+        .search-bar:focus {
+            border-color: var(--primary);
+            outline: none;
+            box-shadow: 0 0 15px rgba(255, 42, 42, 0.2);
+        }
+
+        /* GRIGLIA VIDEO (RISULTATI DI RICERCA) */
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 25px;
+            margin-top: 20px;
+        }
+
+        .video-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .video-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6);
+            border-color: #333;
+        }
+
+        .video-thumbnail {
+            position: relative;
+            width: 100%;
+            padding-top: 56.25%; /* Ratio 16:9 */
+            background-size: cover;
+            background-position: center;
+        }
+
+        .video-info {
+            padding: 12px;
+        }
+
+        .video-title {
+            font-size: 0.95rem;
+            font-weight: bold;
+            margin: 0 0 5px 0;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            line-height: 1.3;
+        }
+
+        /* SEZIONE VIDEO PLAYER FISSO IN BASSO */
+        .player-section {
+            display: none;
+            margin-top: auto;
+            background: #121214;
+            border: 1px solid var(--border);
+            padding: 20px;
+            border-radius: 16px;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .player-container {
+            width: 320px;
+            height: 180px;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .player-details {
+            flex: 1;
+        }
+
+        .player-details h3 { margin: 0 0 5px 0; font-size: 1.1rem; }
+        .player-details p { margin: 0; color: var(--text-muted); font-size: 0.9rem; }
     </style>
 
-    <!-- LIBRERIE GOOGLE COMPAT -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
-    <!-- CARICATORE CENTRALIZZATO -->
-    <script src="firebase-loader.js"></script>
+    <script src="firebase-loader.js?v=2"></script>
 </head>
 <body>
-
-    <div id="loading-overlay">🦂 SCORPION PULSE...</div>
 
     <div class="sidebar">
         <div>
             <div class="brand">🦂 SCORPION PULSE</div>
-            <div class="nav-section">
-                <h3>Libreria</h3>
-                <ul class="nav-list">
-                    <li>❤️ Brani Preferiti</li>
-                    <li>📂 Playlist</li>
-                </ul>
+            <div class="menu-items">
+                <button class="menu-btn active">🏠 Home / Mixtube</button>
+                <button class="menu-btn">🔥 Trap & Drill Italia</button>
+                <button class="menu-btn">❤️ Brani Preferiti</button>
             </div>
         </div>
-        <div class="user-tag">
-            <span id="label-user">Caricamento...</span>
-            <button class="btn-logout" onclick="eseguiLogout()">Esci</button>
+
+        <div class="user-profile">
+            <div class="user-name" id="display-user">Caricamento...</div>
+            <button class="logout-btn" id="btn-logout">Esci</button>
         </div>
     </div>
 
-    <div class="main-panel">
-        <div class="search-box">
-            <input type="text" id="cerca-input" placeholder="Cerca una canzone o artista...">
-            <button class="btn-search" onclick="avviaRicerca()">Cerca</button>
+    <div class="main-content">
+        <div class="search-container">
+            <input type="text" class="search-bar" id="search-input" placeholder="Cerca tracce, artisti o album drill/trap...">
         </div>
+
+        <h2 id="section-title">Brani di Tendenza</h2>
         
-        <div id="player-zone">
-            <p id="placeholder-testo">Scegli un brano dai risultati per avviare la riproduzione.</p>
-            <div id="youtube-player-vero" style="width:100%; display:none;"></div>
+        <div class="results-grid" id="results-container">
+            </div>
+
+        <div class="player-section" id="music-player">
+            <div class="player-container">
+                <iframe id="yt-iframe" width="100%" height="100%" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            </div>
+            <div class="player-details">
+                <h3 id="player-title">Nessun brano in riproduzione</h3>
+                <p id="player-author">Seleziona un video per avviarlo</p>
+            </div>
         </div>
-        
-        <h2>Risultati della ricerca</h2>
-        <div id="risultati-lista"></div>
     </div>
 
     <script>
-        const overlay = document.getElementById('loading-overlay');
-        let hasResponded = false;
-
-        // 1. TIMEOUT DI EMERGENZA (Sblocca se Firebase non risponde o crasha)
-        setTimeout(() => {
-            if (!hasResponded) {
-                console.warn("Firebase ha impiegato troppo tempo a rispondere. Reindirizzamento al login.");
-                window.location.href = "login.html";
-            }
-        }, 3000); // 3 secondi di attesa massimi
-
-        // 2. CONTROLLO AUTENTICAZIONE REALE
+        // 1. GESTIONE UTENTE E LOGOUT
         if (typeof auth !== 'undefined') {
             auth.onAuthStateChanged((user) => {
-                hasResponded = true; // Segnala che Firebase ha dato segni di vita
                 if (user) {
-                    document.getElementById('label-user').innerText = user.email;
-                    overlay.style.display = 'none'; // Rimuove la schermata di caricamento
+                    // Mostra l'email o il nome salvato nel localStorage
+                    document.getElementById('display-user').innerText = "👤 " + (user.email);
                 } else {
+                    // Se non è loggato, rimandalo alla pagina di login
                     window.location.href = "login.html";
                 }
             });
-        } else {
-            // Se la variabile auth non esiste proprio, c'è un errore nel file loader
-            hasResponded = true;
-            alert("Errore: Impossibile comunicare con il file 'firebase-loader.js'. Controlla i tuoi codici configurazione.");
-            window.location.href = "login.html";
         }
 
-        function avviaRicerca() {
-            const queryText = document.getElementById('cerca-input').value.trim();
-            if(!queryText) return;
+        document.getElementById('btn-logout').addEventListener('click', () => {
+            if (typeof auth !== 'undefined') {
+                auth.signOut().then(() => {
+                    window.location.href = "login.html"; //
+                });
+            }
+        });
+
+        // 2. MOTORE DI RICERCA LIVE (TRAMITE FEED PUBBLICO RSS/NO-KEY YOUTUBE)
+        const searchInput = document.getElementById('search-input');
+        const resultsContainer = document.getElementById('results-container');
+        let timeoutRicerca = null;
+
+        // Lista iniziale di tendenze Drill/Trap Italiane
+        const trendIniziali = [
+            { id: "46f3H5zXnZ8", title: "Sfera Ebbasta - Visiera A Becco" },
+            { id: "pXq8Lw5_mBA", title: "Shiva, Sfera Ebbasta - Un Milione Di Volte" },
+            { id: "b8_7E9hQv9s", title: "Skinny - Nuova Era" },
+            { id: "3w8YmGZlY8A", title: "Geolier - I P' Me, Tu P' Te" }
+        ];
+
+        // Carica i video di default all'avvio
+        function mostraTrend() {
+            resultsContainer.innerHTML = "";
+            trendIniziali.forEach(video => creaCardVideo(video.id, video.title));
+        }
+        mostraTrend();
+
+        // Listener per la ricerca mentre l'utente scrive (Live)
+        searchInput.addEventListener('input', () => {
+            clearTimeout(timeoutRicerca);
+            const query = searchInput.value.trim();
+
+            if (query.length < 3) {
+                if(query.length === 0) mostraTrend();
+                return;
+            }
+
+            // Aspetta che l'utente si fermi 500ms prima di inviare la richiesta (ottimizzazione)
+            timeoutRicerca = setTimeout(() => {
+                eseguiRicercaLive(query);
+            }, 500);
+        });
+
+        // Funzione di scraping sicura ed istantanea per i video senza usare chiavi API costose
+        function eseguiRicercaLive(chiave) {
+            document.getElementById('section-title').innerText = "Risultati per: " + chiave;
+            resultsContainer.innerHTML = "<p style='color: #aaa;'>Ricerca tracce in corso...</p>";
+
+            // Utilizziamo un motore di scomposizione pubblico per estrarre video da YouTube senza blocchi
+            const url = `https://tools.aimylogic.com/api/googlesearch/search?query=site:youtube.com/watch ${encodeURIComponent(chiave)}`;
+
+            fetch(url)
+                .then(res => res.json())
+                .then(data => {
+                    resultsContainer.innerHTML = "";
+                    let contatore = 0;
+
+                    if(data && data.results) {
+                        data.results.forEach(item => {
+                            if (item.url.includes("watch?v=") && contatore < 8) {
+                                const videoId = item.url.split("watch?v=")[1].split("&")[0];
+                                creaCardVideo(videoId, item.title.replace(" - YouTube", ""));
+                                contatore++;
+                            }
+                        });
+                    }
+                    if (contatore === 0) {
+                        resultsContainer.innerHTML = "<p style='color: #ff2a2a;'>Nessun brano trovato. Riprova!</p>";
+                    }
+                })
+                .catch(err => {
+                    console.error("Errore ricerca:", err);
+                    resultsContainer.innerHTML = "<p style='color: #ff2a2a;'>Errore di connessione live.</p>";
+                });
+        }
+
+        // Crea graficamente gli elementi della lista in stile Mixtube
+        function creaCardVideo(id, titolo) {
+            const card = document.createElement('div');
+            card.className = 'video-card';
+            card.innerHTML = `
+                <div class="video-thumbnail" style="background-image: url('https://img.youtube.com/vi/${id}/mqdefault.jpg')"></div>
+                <div class="video-info">
+                    <div class="video-title">${titolo}</div>
+                </div>
+            `;
             
-            const lista = document.getElementById('risultati-lista');
-            lista.innerHTML = `
-                <div class="traccia-card">
-                    <span>${queryText} (Traccia di Test)</span>
-                    <button class="btn-play" onclick="riproduciTraccia('dQw4w9WgXcQ')">▶ Play</button>
-                </div>`;
-        }
-
-        function riproduciTraccia(idVideo) {
-            document.getElementById('placeholder-testo').style.display = 'none';
-            const container = document.getElementById('youtube-player-vero');
-            container.style.display = 'block';
-            container.innerHTML = `
-                <iframe width="100%" height="250" 
-                    src="https://www.youtube.com/embed/${idVideo}?autoplay=1" 
-                    frameborder="0" 
-                    allow="autoplay; encrypted-media" 
-                    allowfullscreen 
-                    style="border-radius:12px; border: 1px solid var(--border);">
-                </iframe>`;
-        }
-
-        function eseguiLogout() {
-            auth.signOut().then(() => { 
-                window.location.href = "login.html"; 
+            // Quando l'utente clicca sulla card, carica il video nel player fisso in basso
+            card.addEventListener('click', () => {
+                document.getElementById('music-player').style.display = 'flex';
+                document.getElementById('yt-iframe').src = `https://www.youtube.com/embed/${id}?autoplay=1`;
+                document.getElementById('player-title').innerText = titolo;
+                document.getElementById('player-author').innerText = "In riproduzione su Scorpion Pulse";
             });
+
+            resultsContainer.appendChild(card);
         }
     </script>
 </body>
-            </html>
-    
+</html>

@@ -308,7 +308,7 @@
     <!-- CORPO PRINCIPALE -->
     <div class="main-content">
         <div class="search-container">
-            <input type="text" class="search-bar" id="search-input" placeholder="Cerca qualsiasi canzone al mondo (es. 'Milly', 'Sfera', 'Pop Smoke')...">
+            <input type="text" class="search-bar" id="search-input" placeholder="Cerca canzoni o artisti (es. 'stelle', 'Sfera', 'Shiva')...">
         </div>
 
         <h2 id="section-title">Classifiche Globali</h2>
@@ -350,21 +350,21 @@
             }
         });
 
-        // 2. MOTORE DI RICERCA CON GLOBAL DEEZER API 
+        // 2. MOTORE DI RICERCA CON PROXY STABILE ED EFFECCIATO
         const searchInput = document.getElementById('search-input');
         const resultsContainer = document.getElementById('results-container');
         let timeoutRicerca = null;
 
-        // Tracce globali mostrate di default usando una fetch sulla top-chart italiana/global
+        // Caricamento iniziale di tracce di tendenza stabili senza crash
         function caricaTopTracks() {
-            resultsContainer.innerHTML = "<p style='color: var(--text-muted);'>Caricamento classifiche...</p>";
-            document.getElementById('section-title').innerText = "Classifiche del momento";
+            resultsContainer.innerHTML = "<p style='color: var(--text-muted);'>Caricamento tracce...</p>";
+            document.getElementById('section-title').innerText = "In Evidenza su Scorpion Pulse";
 
-            // Chiamata JSONP o Proxy per bypassare i blocchi CORS dell'API Deezer
-            fetch(`https://api.allorigins.win/get?url=${encodeURIComponent('https://api.deezer.com/chart/0/tracks&limit=12')}`)
+            // Utilizzo di un proxy CORS dedicato e veloce
+            const urlDeezer = "https://api.deezer.com/chart/0/tracks&limit=12";
+            fetch("https://corsproxy.io/?" + encodeURIComponent(urlDeezer))
                 .then(res => res.json())
-                .then(data => {
-                    const parsedData = JSON.parse(data.contents);
+                .then(parsedData => {
                     resultsContainer.innerHTML = "";
                     if(parsedData && parsedData.data) {
                         parsedData.data.forEach(track => {
@@ -373,12 +373,18 @@
                     }
                 })
                 .catch(() => {
-                    resultsContainer.innerHTML = "<p style='color: var(--primary);'>Errore nel caricamento delle classifiche.</p>";
+                    // Sistema di ripiego d'emergenza se i server proxy falliscono temporaneamente
+                    resultsContainer.innerHTML = "";
+                    const backupTracks = [
+                        { preview: "https://cdns-preview-c.dzcdn.net/stream/c-c8347f3b8f1e680a6d05f3bf6ca12bc6-4.mp3", title: "Visiera A Becco", artist: "Sfera Ebbasta", cover: "https://api.deezer.com/album/14742614/image" },
+                        { preview: "https://cdns-preview-d.dzcdn.net/stream/c-d3c267b14fd95cd283f3e69188e89f6d-3.mp3", title: "Stelle", artist: "Shiva feat. Sfera Ebbasta", cover: "https://api.deezer.com/album/376223967/image" }
+                    ];
+                    backupTracks.forEach(t => creaCardMixtube(t.preview, t.title, t.artist, t.cover));
                 });
         }
         caricaTopTracks();
 
-        // INTERCETTAZIONE LIVE DIGITAZIONE
+        // LOGICA LIVE SEARCH AGGIORNATA
         searchInput.addEventListener('input', () => {
             clearTimeout(timeoutRicerca);
             const query = searchInput.value.trim();
@@ -392,24 +398,23 @@
 
             timeoutRicerca = setTimeout(() => { 
                 eseguiRicercaGlobaleDeezer(query); 
-            }, 350);
+            }, 300);
         });
 
         function eseguiRicercaGlobaleDeezer(chiave) {
             document.getElementById('section-title').innerText = "Risultati per: " + chiave;
-            resultsContainer.innerHTML = "<p style='color: var(--text-muted);'>Ricerca nel database mondiale...</p>";
+            resultsContainer.innerHTML = "<p style='color: var(--text-muted);'>Cerca nel database mondiale...</p>";
 
-            // Sfrutta l'endpoint globale di Deezer per trovare qualsiasi traccia esistente
-            fetch(`https://api.allorigins.win/get?url=${encodeURIComponent('https://api.deezer.com/search?q=' + chiave + '&limit=20')}`)
+            const urlSearch = `https://api.deezer.com/search?q=${encodeURIComponent(chiave)}&limit=24`;
+
+            fetch("https://corsproxy.io/?" + encodeURIComponent(urlSearch))
                 .then(res => res.json())
-                .then(data => {
-                    const parsedData = JSON.parse(data.contents);
+                .then(parsedData => {
                     resultsContainer.innerHTML = "";
                     let contatore = 0;
 
                     if (parsedData && parsedData.data) {
                         parsedData.data.forEach(track => {
-                            // Verifica che esista l'anteprima audio funzionante
                             if(track.preview) {
                                 creaCardMixtube(track.preview, track.title, track.artist.name, track.album.cover_medium);
                                 contatore++;
@@ -417,15 +422,29 @@
                         });
                     }
                     if (contatore === 0) {
-                        resultsContainer.innerHTML = "<p style='color: var(--primary);'>Nessun brano trovato. Controlla il nome!</p>";
+                        resultsContainer.innerHTML = "<p style='color: var(--primary);'>Nessun brano trovato. Prova a scrivere in modo diverso!</p>";
                     }
                 })
                 .catch(() => {
-                    resultsContainer.innerHTML = "<p style='color: var(--primary);'>Errore di connessione con l'API musicale.</p>";
+                    // Secondo tentativo d'emergenza via proxy AllOrigins se corsproxy ha problemi
+                    fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(urlSearch)}`)
+                        .then(res => res.json())
+                        .then(response => {
+                            const parsedData = JSON.parse(response.contents);
+                            resultsContainer.innerHTML = "";
+                            if (parsedData && parsedData.data) {
+                                parsedData.data.forEach(track => {
+                                    creaCardMixtube(track.preview, track.title, track.artist.name, track.album.cover_medium);
+                                });
+                            }
+                        })
+                        .catch(() => {
+                            resultsContainer.innerHTML = "<p style='color: var(--primary);'>Errore di connessione. Riprova tra un istante.</p>";
+                        });
                 });
         }
 
-        // COSTRUZIONE STRUTTURA CARD CON COPERTINE REALI DI DEEZER
+        // COSTRUZIONE STRUTTURA CARD
         function creaCardMixtube(audioUrl, titolo, artista, copertinaUrl) {
             const card = document.createElement('div');
             card.className = 'track-card';
@@ -435,7 +454,6 @@
                 <div class="track-artist">${artista}</div>
             `;
 
-            // EVENTO DI RIPRODUZIONE AUDIO INTEGRATO DIRETTAMENTE SENZA AD
             card.addEventListener('click', () => {
                 document.getElementById('player-bar').style.display = 'flex';
                 document.getElementById('p-cover').style.backgroundImage = `url('${copertinaUrl}')`;

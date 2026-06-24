@@ -182,8 +182,9 @@
         <p class="footer-text">Hai già un account? <a href="login.html">Accedi qui</a></p>
     </div>
 
-    <script>
-        console.log("Script Registrazione Scorpion Pulse Pronto.");
+   <script>
+        console.log("Script Registrazione Scorpion Pulse Attivo.");
+        
         const usernameInput = document.getElementById('reg-username');
         const passwordInput = document.getElementById('reg-password');
         const errorDiv = document.getElementById('username-error');
@@ -192,70 +193,93 @@
         const form = document.getElementById('register-form');
         const googleBtn = document.getElementById('btn-google-click');
 
-        // Barra robustezza password
-        passwordInput.addEventListener('input', () => {
-            const val = passwordInput.value;
-            if (val.length === 0) { barra.style.width = "0%"; } 
-            else if (val.length < 6) { barra.style.background = "#ff2a2a"; barra.style.width = "33%"; } 
-            else if (val.length >= 6 && val.length < 10) { barra.style.background = "#ff7300"; barra.style.width = "66%"; } 
-            else { barra.style.background = "#00cc66"; barra.style.width = "100%"; }
-        });
+        // Controllo barra password robusta
+        if (passwordInput && barra) {
+            passwordInput.addEventListener('input', () => {
+                const val = passwordInput.value;
+                if (val.length === 0) { barra.style.width = "0%"; } 
+                else if (val.length < 6) { barra.style.background = "#ff2a2a"; barra.style.width = "33%"; } 
+                else if (val.length >= 6 && val.length < 10) { barra.style.background = "#ff7300"; barra.style.width = "66%"; } 
+                else { barra.style.background = "#00cc66"; barra.style.width = "100%"; }
+            });
+        }
 
-        // Verifica username real-time
-        usernameInput.addEventListener('input', () => {
-            const username = usernameInput.value.trim().toLowerCase();
-            if (username.length < 3) { 
-                errorDiv.style.display = "none"; 
-                successDiv.style.display = "none"; 
-                return; 
-            }
+        // Controllo live dell'username univoco su Firestore
+        if (usernameInput) {
+            usernameInput.addEventListener('input', () => {
+                const username = usernameInput.value.trim().toLowerCase();
+                if (username.length < 3) { 
+                    if(errorDiv) errorDiv.style.display = "none"; 
+                    if(successDiv) successDiv.style.display = "none"; 
+                    return; 
+                }
 
-            db.collection("users").where("username", "==", username).get()
-                .then((querySnapshot) => {
-                    if (!querySnapshot.empty) {
-                        errorDiv.style.display = "block"; successDiv.style.display = "none";
-                    } else {
-                        errorDiv.style.display = "none"; successDiv.style.display = "block";
-                    }
-                }).catch((err) => { console.error(err); });
-        });
+                if (typeof db !== 'undefined') {
+                    db.collection("users").where("username", "==", username).get()
+                        .then((querySnapshot) => {
+                            if (!querySnapshot.empty) {
+                                if(errorDiv) errorDiv.style.display = "block"; 
+                                if(successDiv) successDiv.style.display = "none";
+                            } else {
+                                if(errorDiv) errorDiv.style.display = "none"; 
+                                if(successDiv) successDiv.style.display = "block";
+                            }
+                        }).catch((err) => { console.error("Errore Firestore:", err); });
+                }
+            });
+        }
 
-        // Invio dei dati a Firebase Auth e Firestore
-        form.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const username = usernameInput.value.trim().toLowerCase();
-            const email = document.getElementById('reg-email').value;
-            const password = passwordInput.value;
+        // Invio form finale per la registrazione utente
+        if (form) {
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                
+                if (typeof auth === 'undefined') {
+                    alert("Errore: Firebase non è stato caricato correttamente. Verifica la console.");
+                    return;
+                }
 
-            if (errorDiv.style.display === "block") { 
-                alert("L'username scelto è occupato!"); 
-                return; 
-            }
+                const username = usernameInput.value.trim().toLowerCase();
+                const email = document.getElementById('reg-email').value;
+                const password = passwordInput.value;
 
-            auth.createUserWithEmailAndPassword(email, password)
-                .then((userCredential) => {
-                    return db.collection("users").doc(userCredential.user.uid).set({
-                        username: username,
-                        email: email,
-                        searchHistory: [],
-                        likedVideos: []
+                if (errorDiv && errorDiv.style.display === "block") { 
+                    alert("Questo username non è disponibile!"); 
+                    return; 
+                }
+
+                auth.createUserWithEmailAndPassword(email, password)
+                    .then((userCredential) => {
+                        return db.collection("users").doc(userCredential.user.uid).set({
+                            username: username,
+                            email: email,
+                            searchHistory: [],
+                            likedVideos: []
+                        });
+                    })
+                    .then(() => {
+                        alert("Profilo creato con successo!");
+                        window.location.href = "login.html";
+                    })
+                    .catch((error) => { 
+                        console.error(error);
+                        alert("Errore registrazione: " + error.message); 
                     });
-                })
-                .then(() => {
-                    alert("Registrazione completata!");
-                    window.location.href = "login.html";
-                })
-                .catch((error) => { alert("Errore: " + error.message); });
-        });
+            });
+        }
 
-        // Registrazione Rapida Google
-        googleBtn.addEventListener('click', () => {
-            auth.signInWithPopup(provider)
-                .then((result) => {
-                    localStorage.setItem("usernameUtente", result.user.displayName);
-                    window.location.href = "index.html";
-                }).catch((err) => { console.warn(err.message); });
-        });
+        // Registrazione rapida popup Google
+        if (googleBtn) {
+            googleBtn.addEventListener('click', () => {
+                if (typeof auth !== 'undefined' && typeof provider !== 'undefined') {
+                    auth.signInWithPopup(provider)
+                        .then((result) => {
+                            localStorage.setItem("usernameUtente", result.user.displayName);
+                            window.location.href = "index.html";
+                        }).catch((err) => { console.warn("Finestra di autenticazione chiusa:", err.message); });
+                }
+            });
+        }
     </script>
 </body>
 </html>

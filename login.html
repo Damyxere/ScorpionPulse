@@ -1,4 +1,5 @@
-<!DOCTYPE html>
+
+  <!DOCTYPE html>
 <html lang="it">
 <head>
     <meta charset="UTF-8">
@@ -118,7 +119,6 @@
             cursor: pointer;
             transition: background 0.2s;
         }
-        .btn-google img { width: 20px; height: 20px; object-fit: contain; }
         .btn-google:hover { 
             background: #e6e6e6; 
             box-shadow: 0 0 20px rgba(255, 255, 255, 0.15);
@@ -133,23 +133,10 @@
         }
     </style>
 
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
     <script src="firebase-loader.js"></script>
-
-    <script>
-        const usernameInput = document.getElementById('reg-username');
-        const passwordInput = document.getElementById('reg-password');
-        const errorDiv = document.getElementById('username-error');
-        const successDiv = document.getElementById('username-success');
-        const barra = document.getElementById('strength-bar');
-        const form = document.getElementById('register-form');
-
-        // ... tutto il resto del codice con i listener del form, il submit e il tasto Google
-    </script>
-    
 </head>
 <body>
 
@@ -174,7 +161,6 @@
         <div class="divider">oppure</div>
 
         <button class="btn-google" type="button" id="btn-google-login">
-            <img src="logo_google.webp" alt="Google">
             Accedi con Google
         </button>
 
@@ -182,44 +168,52 @@
     </div>
 
     <script>
-        // Blocco di sicurezza immediato se manca il file di configurazione
-        if (typeof firebase === 'undefined') {
-            alert("Errore critico: Il file 'firebase-loader.js' non è stato trovato!");
-        }
+        console.log("Script Login Scorpion Pulse avviato!");
 
         const loginForm = document.getElementById('login-form');
+        const googleBtn = document.getElementById('btn-google-login');
+
+        // Controllo diagnostico iniziale se gli elementi ci sono
+        if (!loginForm) console.error("❌ Errore: Manca l'elemento 'login-form' nell'HTML!");
+        if (!googleBtn) console.error("❌ Errore: Manca l'elemento 'btn-google-login' nell'HTML!");
 
         // 1. LOGIN STANDARD (EMAIL + PASSWORD)
-        loginForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const email = document.getElementById('login-email').value.trim();
-            const password = document.getElementById('login-password').value;
+        if (loginForm) {
+            loginForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                console.log("Tentativo di login standard in corso...");
 
-            auth.signInWithEmailAndPassword(email, password)
-                .then((userCredential) => {
-                    // Salviamo temporaneamente un riferimento locale della sessione
-                    localStorage.setItem("usernameUtente", userCredential.user.email);
-                    // Voliamo sul player!
-                    window.location.href = "index.html";
-                })
-                .catch((err) => { 
-                    console.error(err);
-                    alert("Errore di accesso: Email o Password errate!"); 
-                });
-        });
+                const email = document.getElementById('login-email').value.trim();
+                const password = document.getElementById('login-password').value;
+
+                auth.signInWithEmailAndPassword(email, password)
+                    .then((userCredential) => {
+                        console.log("Login riuscito! Reindirizzamento su index.html...");
+                        localStorage.setItem("usernameUtente", userCredential.user.email);
+                        window.location.href = "index.html";
+                    })
+                    .catch((err) => { 
+                        console.error("Errore di autenticazione: ", err);
+                        alert("Errore di accesso: Email o Password errate!"); 
+                    });
+            });
+        }
 
         // 2. LOGIN RAPIDO CON POPUP DI GOOGLE
-        document.getElementById('btn-google-login').addEventListener('click', () => {
-            auth.signInWithPopup(provider)
-                .then((result) => {
-                    localStorage.setItem("usernameUtente", result.user.displayName);
-                    window.location.href = "index.html";
-                })
-                .catch((err) => { 
-                    console.warn("Autenticazione Google annullata o fallita: ", err.message); 
-                });
-        });
+        if (googleBtn) {
+            googleBtn.addEventListener('click', () => {
+                console.log("Apertura popup Google Auth per il login...");
+                auth.signInWithPopup(provider)
+                    .then((result) => {
+                        console.log("Login Google riuscito!");
+                        localStorage.setItem("usernameUtente", result.user.displayName);
+                        window.location.href = "index.html";
+                    })
+                    .catch((err) => { 
+                        console.warn("Autenticazione Google interrotta: ", err.message); 
+                    });
+            });
+        }
     </script>
 </body>
-  </html>
-  
+</html>

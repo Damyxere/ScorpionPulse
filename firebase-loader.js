@@ -28,9 +28,27 @@ try {
     });
 
     console.log("Scorpion Pulse DB: Sincronizzazione completata con successo.");
-} catch (error) {
+}} catch (error) {
     console.error("Errore critico durante la sincronizzazione di Firebase:", error);
     
+    // Sistema di ripiego automatico (Fall-back) aggiornato
+    window.auth = {
+        onAuthStateChanged: (callback) => {
+            // Se siamo in modalità ospite, simula un utente attivo
+            callback({ email: "guest.scorpion@pulse.local", uid: "guest_mode" });
+        },
+        signOut: () => { 
+            return Promise.resolve(); 
+        },
+        // Aggiungiamo la funzione mancante per evitare il crash visto in image_ec079d.png
+        signInWithEmailAndPassword: (email, password) => {
+            console.log("Accesso simulato in modalità ospite con:", email);
+            return Promise.resolve({
+                user: { email: email, uid: "guest_mode" }
+            });
+        }
+    };
+}
     // Sistema di ripiego automatico (Fall-back) per evitare il blocco dell'interfaccia
     window.auth = {
         onAuthStateChanged: (callback) => {

@@ -9,14 +9,14 @@ const firebaseConfig = {
     measurementId: "G-0RQ94CYRSJ"
 };
 
-// Inizializzazione dei servizi
+// Inizializzazione sicura dei servizi
 try {
     if (!firebase.apps.length) {
         firebase.initializeApp(firebaseConfig);
-        console.log("🔥 Firebase Scorpion Pulse inizializzato correttamente!");
+        console.log("🔥 Firebase Scorpion Pulse inizializzato con successo!");
     }
 } catch (error) {
-    console.error("❌ Errore durante l'inizializzazione:", error);
+    console.error("❌ Errore critico durante l'inizializzazione:", error);
 }
 
 const auth = firebase.auth();

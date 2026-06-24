@@ -144,7 +144,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
     
-    <script src="firebase-loader.js"></script>
+    <script src="firebase-loader.js?v=2"></script>
 </head>
 <body>
 
@@ -184,7 +184,7 @@
     </div>
 
     <script>
-        console.log("Interfaccia di registrazione inizializzata.");
+        console.log("Script Registrazione Attivo.");
         
         const usernameInput = document.getElementById('reg-username');
         const passwordInput = document.getElementById('reg-password');
@@ -194,7 +194,6 @@
         const form = document.getElementById('register-form');
         const googleBtn = document.getElementById('btn-google-click');
 
-        // Monitoraggio tempo reale sicurezza password
         if (passwordInput && barra) {
             passwordInput.addEventListener('input', () => {
                 const val = passwordInput.value;
@@ -205,7 +204,6 @@
             });
         }
 
-        // Verifica disponibilità nickname su Firestore
         if (usernameInput) {
             usernameInput.addEventListener('input', () => {
                 const username = usernameInput.value.trim().toLowerCase();
@@ -225,18 +223,17 @@
                                 if(errorDiv) errorDiv.style.display = "none"; 
                                 if(successDiv) successDiv.style.display = "block";
                             }
-                        }).catch((err) => { console.error("Errore di comunicazione DB:", err); });
+                        }).catch((err) => { console.error("Errore DB:", err); });
                 }
             });
         }
 
-        // Gestione evento submit del form
         if (form) {
             form.addEventListener('submit', (e) => {
                 e.preventDefault();
                 
                 if (typeof auth === 'undefined') {
-                    alert("Errore di caricamento: i servizi di autenticazione non sono pronti.");
+                    alert("Errore: Servizi Firebase non configurati correttamente.");
                     return;
                 }
 
@@ -245,7 +242,7 @@
                 const password = passwordInput.value;
 
                 if (errorDiv && errorDiv.style.display === "block") { 
-                    alert("Cambia il tuo username prima di continuare!"); 
+                    alert("Questo username non è utilizzabile!"); 
                     return; 
                 }
 
@@ -259,17 +256,16 @@
                         });
                     })
                     .then(() => {
-                        alert("Account configurato con successo!");
+                        alert("Profilo creato!");
                         window.location.href = "login.html";
                     })
                     .catch((error) => { 
                         console.error(error);
-                        alert("Impossibile completare la registrazione: " + error.message); 
+                        alert("Errore: " + error.message); 
                     });
             });
         }
 
-        // Autenticazione federata con Google PopUp
         if (googleBtn) {
             googleBtn.addEventListener('click', () => {
                 if (typeof auth !== 'undefined' && typeof provider !== 'undefined') {
@@ -277,7 +273,7 @@
                         .then((result) => {
                             localStorage.setItem("usernameUtente", result.user.displayName);
                             window.location.href = "index.html";
-                        }).catch((err) => { console.warn("Accesso annullato dall'utente:", err.message); });
+                        }).catch((err) => { console.warn("Popup chiuso:", err.message); });
                 }
             });
         }

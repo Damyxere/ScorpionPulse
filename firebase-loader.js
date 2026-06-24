@@ -1,6 +1,6 @@
 // CONFIGURAZIONE DEFINITIVA SCORPION PULSE
 const firebaseConfig = {
-    apiKey: "AIzaSyAh0Mqbd_bamcTKda38tGU2H09W8rGnmzU", 
+    apiKey: "AIzaSyAh0MqbdbamcTKda38tGU2H09W8rGnmzU", 
     authDomain: "scorpionpulse-b660f.firebaseapp.com",
     projectId: "scorpionpulse-b660f",
     storageBucket: "scorpionpulse-b660f.firebasestorage.app",

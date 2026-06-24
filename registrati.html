@@ -165,12 +165,22 @@
             .auth-card { padding: 30px 20px; border: none; background: transparent; box-shadow: none; }
         }
     </style>
-
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
     <script src="firebase-loader.js"></script>
+
+    <script>
+        const usernameInput = document.getElementById('reg-username');
+        const passwordInput = document.getElementById('reg-password');
+        const errorDiv = document.getElementById('username-error');
+        const successDiv = document.getElementById('username-success');
+        const barra = document.getElementById('strength-bar');
+        const form = document.getElementById('register-form');
+
+        // ... tutto il resto del codice con i listener del form, il submit e il tasto Google
+    </script>
 </head>
 <body>
 

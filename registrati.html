@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+   <!DOCTYPE html>
 <html lang="it">
 <head>
     <meta charset="UTF-8">
@@ -143,11 +143,6 @@
             cursor: pointer;
             transition: background 0.2s;
         }
-        .btn-google img {
-            width: 20px;
-            height: 20px;
-            object-fit: contain;
-        }
         .btn-google:hover { 
             background: #e6e6e6; 
             box-shadow: 0 0 20px rgba(255, 255, 255, 0.15); 
@@ -165,22 +160,12 @@
             .auth-card { padding: 30px 20px; border: none; background: transparent; box-shadow: none; }
         }
     </style>
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
     <script src="firebase-loader.js"></script>
-
-    <script>
-        const usernameInput = document.getElementById('reg-username');
-        const passwordInput = document.getElementById('reg-password');
-        const errorDiv = document.getElementById('username-error');
-        const successDiv = document.getElementById('username-success');
-        const barra = document.getElementById('strength-bar');
-        const form = document.getElementById('register-form');
-
-        // ... tutto il resto del codice con i listener del form, il submit e il tasto Google
-    </script>
 </head>
 <body>
 
@@ -213,7 +198,6 @@
         <div class="divider">oppure</div>
 
         <button class="btn-google" type="button" id="btn-google-click">
-            <img src="logo_google.webp" alt="Google">
             Registrati con Google
         </button>
 
@@ -221,114 +205,104 @@
     </div>
 
     <script>
-        // CONTROLLO DI SICUREZZA SE IL FILE CONFIG NON È STATO CARICATO CORRETTAMENTE
-        if (typeof firebase === 'undefined') {
-            alert("Errore critico: Il file 'firebase-loader.js' non è configurato o non è stato trovato!");
-        }
-
+        console.log("Script Scorpion Pulse avviato correttamente!");
+        
         const usernameInput = document.getElementById('reg-username');
         const passwordInput = document.getElementById('reg-password');
         const errorDiv = document.getElementById('username-error');
         const successDiv = document.getElementById('username-success');
         const barra = document.getElementById('strength-bar');
         const form = document.getElementById('register-form');
+        const googleBtn = document.getElementById('btn-google-click');
 
-        // 1. GESTIONE DELLA BARRA DELLA PASSWORD (GRAFICA REATTIVA)
-        passwordInput.addEventListener('input', () => {
-            const val = passwordInput.value;
-            if (val.length === 0) { 
-                barra.style.width = "0%"; 
-            } else if (val.length < 6) { 
-                barra.style.background = "#ff2a2a"; 
-                barra.style.width = "33%"; 
-            } else if (val.length >= 6 && val.length < 10) { 
-                barra.style.background = "#ff7300"; 
-                barra.style.width = "66%"; 
-            } else { 
-                barra.style.background = "#00cc66"; 
-                barra.style.width = "100%"; 
-            }
-        });
+        // Controlli diagnostici iniziali
+        if (!form) console.error("❌ Errore: Manca l'elemento 'register-form' nell'HTML!");
+        if (!googleBtn) console.error("❌ Errore: Manca l'elemento 'btn-google-click' nell'HTML!");
 
-        // 2. CONTROLLO USERNAME SU FIRESTORE IN REAL TIME
-        usernameInput.addEventListener('input', () => {
-            const username = usernameInput.value.trim().toLowerCase();
-            
-            if (username.length < 3) {
-                errorDiv.style.display = "none";
-                successDiv.style.display = "none";
-                usernameInput.style.borderColor = "var(--border)";
-                return;
-            }
+        // 1. REATTIVITÀ BARRA PASSWORD
+        if (passwordInput && barra) {
+            passwordInput.addEventListener('input', () => {
+                const val = passwordInput.value;
+                if (val.length === 0) { barra.style.width = "0%"; } 
+                else if (val.length < 6) { barra.style.background = "#ff2a2a"; barra.style.width = "33%"; } 
+                else if (val.length >= 6 && val.length < 10) { barra.style.background = "#ff7300"; barra.style.width = "66%"; } 
+                else { barra.style.background = "#00cc66"; barra.style.width = "100%"; }
+            });
+        }
 
-            db.collection("users").where("username", "==", username).get()
-                .then((querySnapshot) => {
-                    if (!querySnapshot.empty) {
-                        errorDiv.style.display = "block";
-                        successDiv.style.display = "none";
-                        usernameInput.style.borderColor = "var(--primary)";
-                    } else {
-                        errorDiv.style.display = "none";
-                        successDiv.style.display = "block";
-                        usernameInput.style.borderColor = "#00cc66";
-                    }
-                })
-                .catch((err) => { 
-                    console.error("Errore lettura database: ", err); 
-                });
-        });
+        // 2. LOGICA CONTROLLO USERNAME IN REAL-TIME SU FIRESTORE
+        if (usernameInput) {
+            usernameInput.addEventListener('input', () => {
+                const username = usernameInput.value.trim().toLowerCase();
+                if (username.length < 3) { 
+                    if(errorDiv) errorDiv.style.display = "none"; 
+                    if(successDiv) successDiv.style.display = "none"; 
+                    return; 
+                }
 
-        // 3. INVIO FORM REGISTRAZIONE SUL DATABASE REALE
-        form.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const username = usernameInput.value.trim().toLowerCase();
-            const email = document.getElementById('reg-email').value;
-            const password = passwordInput.value;
+                console.log("Controllo database per l'username: " + username);
+                db.collection("users").where("username", "==", username).get()
+                    .then((querySnapshot) => {
+                        if (!querySnapshot.empty) {
+                            if(errorDiv) errorDiv.style.display = "block"; 
+                            if(successDiv) successDiv.style.display = "none";
+                        } else {
+                            if(errorDiv) errorDiv.style.display = "none"; 
+                            if(successDiv) successDiv.style.display = "block";
+                        }
+                    }).catch((err) => { console.error("Errore lettura database: ", err); });
+            });
+        }
 
-            if (errorDiv.style.display === "block") {
-                alert("L'username scelto è già occupato! Scegline un altro.");
-                return;
-            }
+        // 3. LOGICA DI INVIO FORM E SALVATAGGIO DATI UTENTE
+        if (form) {
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                console.log("Tentativo di invio form avviato.");
 
-            if (username.length < 3) {
-                alert("L'username deve contenere almeno 3 caratteri!");
-                return;
-            }
+                const username = usernameInput.value.trim().toLowerCase();
+                const email = document.getElementById('reg-email').value;
+                const password = passwordInput.value;
 
-            // Registrazione dell'utente in Firebase Authentication
-            auth.createUserWithEmailAndPassword(email, password)
-                .then((userCredential) => {
-                    const user = userCredential.user;
-                    
-                    // Creazione del database utente associato all'ID unico su Firestore
-                    return db.collection("users").doc(user.uid).set({
-                        username: username,
-                        email: email,
-                        searchHistory: [],
-                        likedVideos: []
+                if (errorDiv && errorDiv.style.display === "block") { 
+                    alert("L'username scelto è già registrato!"); 
+                    return; 
+                }
+
+                auth.createUserWithEmailAndPassword(email, password)
+                    .then((userCredential) => {
+                        console.log("Autenticazione passata. Generazione documento su Firestore...");
+                        return db.collection("users").doc(userCredential.user.uid).set({
+                            username: username,
+                            email: email,
+                            searchHistory: [],
+                            likedVideos: []
+                        });
+                    })
+                    .then(() => {
+                        alert("Registrazione effettuata con successo!");
+                        window.location.href = "login.html";
+                    })
+                    .catch((error) => { 
+                        console.error(error);
+                        alert("Errore Firebase: " + error.message); 
                     });
-                })
-                .then(() => {
-                    alert("Registrazione completata su Scorpion Pulse! Verrai reindirizzato al login.");
-                    window.location.href = "login.html";
-                })
-                .catch((error) => { 
-                    alert("Errore Firebase: " + error.message); 
-                });
-        });
+            });
+        }
 
-        // 4. PULSANTE DI ACCESSO RAPIDO GOOGLE AUTH
-        document.getElementById('btn-google-click').addEventListener('click', () => {
-            auth.signInWithPopup(provider)
-                .then((result) => {
-                    localStorage.setItem("usernameUtente", result.user.displayName);
-                    window.location.href = "index.html";
-                })
-                .catch((err) => { 
-                    console.warn("Popup chiusa o bloccata: ", err.message); 
-                });
-        });
+        // 4. ACCESSO RAPIDO GOOGLE AUTH
+        if (googleBtn) {
+            googleBtn.addEventListener('click', () => {
+                console.log("Apertura popup Google Auth in corso...");
+                auth.signInWithPopup(provider)
+                    .then((result) => {
+                        localStorage.setItem("usernameUtente", result.user.displayName);
+                        window.location.href = "index.html";
+                    }).catch((err) => { 
+                        console.warn("Chiusura o blocco della finestra popup: ", err.message); 
+                    });
+            });
+        }
     </script>
 </body>
-  </html>
-      
+</html>

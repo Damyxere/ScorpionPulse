@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Scorpion Pulse - Mixtube Dashboard</title>
+    <title>Scorpion Pulse - Dashboard</title>
     <style>
         :root {
             --bg-color: #070708;
@@ -26,7 +26,7 @@
             overflow: hidden;
         }
 
-        /* BARRA LATERALE (SIDEBAR) */
+        /* BARRA LATERALE */
         .sidebar {
             width: 260px;
             background: var(--sidebar-bg);
@@ -212,14 +212,17 @@
         .player-details p { margin: 0; color: var(--text-muted); font-size: 0.9rem; }
     </style>
 
+    <!-- CARICAMENTO DELLE LIBRERIE COMPAT DI FIREBASE -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
+    <!-- CONFIGURAZIONE AGGIORNATA E FUNZIONANTE -->
     <script src="firebase-loader.js?v=2"></script>
 </head>
 <body>
 
+    <!-- BARRA LATERALE -->
     <div class="sidebar">
         <div>
             <div class="brand">🦂 SCORPION PULSE</div>
@@ -230,22 +233,28 @@
             </div>
         </div>
 
+        <!-- BLOCCO PROFILO -->
         <div class="user-profile">
             <div class="user-name" id="display-user">Caricamento...</div>
             <button class="logout-btn" id="btn-logout">Esci</button>
         </div>
     </div>
 
+    <!-- MAIN CONTENT -->
     <div class="main-content">
+        <!-- BARRA RICERCA LIVE -->
         <div class="search-container">
             <input type="text" class="search-bar" id="search-input" placeholder="Cerca tracce, artisti o album drill/trap...">
         </div>
 
         <h2 id="section-title">Brani di Tendenza</h2>
         
+        <!-- GRIGLIA DEI RISULTATI -->
         <div class="results-grid" id="results-container">
-            </div>
+            <!-- I video caricati dinamicamente appariranno qui -->
+        </div>
 
+        <!-- PLAYER IN BASSO INTEGRATO -->
         <div class="player-section" id="music-player">
             <div class="player-container">
                 <iframe id="yt-iframe" width="100%" height="100%" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
@@ -258,15 +267,13 @@
     </div>
 
     <script>
-        // 1. GESTIONE UTENTE E LOGOUT
+        // 1. GESTIONE UTENTE E LOGOUT CON CONTROLLO STATO
         if (typeof auth !== 'undefined') {
             auth.onAuthStateChanged((user) => {
                 if (user) {
-                    // Mostra l'email o il nome salvato nel localStorage
                     document.getElementById('display-user').innerText = "👤 " + (user.email);
                 } else {
-                    // Se non è loggato, rimandalo alla pagina di login
-                    window.location.href = "login.html";
+                    window.location.href = "login.html"; // Se non è loggato, rimandalo alla pagina di login
                 }
             });
         }
@@ -295,6 +302,7 @@
         // Carica i video di default all'avvio
         function mostraTrend() {
             resultsContainer.innerHTML = "";
+            document.getElementById('section-title').innerText = "Brani di Tendenza";
             trendIniziali.forEach(video => creaCardVideo(video.id, video.title));
         }
         mostraTrend();
@@ -304,51 +312,62 @@
             clearTimeout(timeoutRicerca);
             const query = searchInput.value.trim();
 
-            if (query.length < 3) {
-                if(query.length === 0) mostraTrend();
+            if (query.length === 0) {
+                mostraTrend();
                 return;
             }
 
-            // Aspetta che l'utente si fermi 500ms prima di inviare la richiesta (ottimizzazione)
+            if (query.length < 3) return;
+
+            // Aspetta che l'utente si fermi 500ms prima di inviare la richiesta
             timeoutRicerca = setTimeout(() => {
-                eseguiRicercaLive(query);
+                eseguiRicercaYouTubeLive(query);
             }, 500);
         });
 
-        // Funzione di scraping sicura ed istantanea per i video senza usare chiavi API costose
-        function eseguiRicercaLive(chiave) {
+        // Connessione in tempo reale con YouTube tramite proxy pubblico pulito per aggirare i limiti API
+        function eseguiRicercaYouTubeLive(chiave) {
             document.getElementById('section-title').innerText = "Risultati per: " + chiave;
-            resultsContainer.innerHTML = "<p style='color: #aaa;'>Ricerca tracce in corso...</p>";
+            resultsContainer.innerHTML = "<p style='color: #888893;'>Ricerca dei brani su YouTube in corso...</p>";
 
-            // Utilizziamo un motore di scomposizione pubblico per estrarre video da YouTube senza blocchi
             const url = `https://tools.aimylogic.com/api/googlesearch/search?query=site:youtube.com/watch ${encodeURIComponent(chiave)}`;
 
             fetch(url)
                 .then(res => res.json())
                 .then(data => {
                     resultsContainer.innerHTML = "";
-                    let contatore = 0;
+                    let videoTrovati = 0;
 
-                    if(data && data.results) {
+                    if (data && data.results) {
                         data.results.forEach(item => {
-                            if (item.url.includes("watch?v=") && contatore < 8) {
-                                const videoId = item.url.split("watch?v=")[1].split("&")[0];
-                                creaCardVideo(videoId, item.title.replace(" - YouTube", ""));
-                                contatore++;
+                            if (item.url.includes("watch?v=") && videoTrovati < 8) {
+                                try {
+                                    const urlObj = new URL(item.url);
+                                    const videoId = urlObj.searchParams.get("v");
+                                    
+                                    if (videoId) {
+                                        const titoloPulito = item.title.replace(" - YouTube", "");
+                                        creaCardVideo(videoId, titoloPulito);
+                                        videoTrovati++;
+                                    }
+                                } catch (e) {
+                                    console.error("Errore parsing URL:", e);
+                                }
                             }
                         });
                     }
-                    if (contatore === 0) {
-                        resultsContainer.innerHTML = "<p style='color: #ff2a2a;'>Nessun brano trovato. Riprova!</p>";
+
+                    if (videoTrovati === 0) {
+                        resultsContainer.innerHTML = "<p style='color: #ff2a2a;'>Nessun risultato live trovato. Prova con parole più specifiche.</p>";
                     }
                 })
                 .catch(err => {
-                    console.error("Errore ricerca:", err);
-                    resultsContainer.innerHTML = "<p style='color: #ff2a2a;'>Errore di connessione live.</p>";
+                    console.error("Errore di rete durante la ricerca:", err);
+                    resultsContainer.innerHTML = "<p style='color: #ff2a2a;'>Errore di connessione live con i server multimediali.</p>";
                 });
         }
 
-        // Crea graficamente gli elementi della lista in stile Mixtube
+        // Generatore di card video e aggancio riproduttore
         function creaCardVideo(id, titolo) {
             const card = document.createElement('div');
             card.className = 'video-card';
@@ -359,12 +378,15 @@
                 </div>
             `;
             
-            // Quando l'utente clicca sulla card, carica il video nel player fisso in basso
             card.addEventListener('click', () => {
-                document.getElementById('music-player').style.display = 'flex';
-                document.getElementById('yt-iframe').src = `https://www.youtube.com/embed/${id}?autoplay=1`;
+                const playerSection = document.getElementById('music-player');
+                const iframe = document.getElementById('yt-iframe');
+                
+                playerSection.style.display = 'flex';
+                iframe.src = `https://www.youtube.com/embed/${id}?autoplay=1&modestbranding=1&rel=0`;
+                
                 document.getElementById('player-title').innerText = titolo;
-                document.getElementById('player-author').innerText = "In riproduzione su Scorpion Pulse";
+                document.getElementById('player-author').innerText = "In riproduzione streaming su Scorpion Pulse";
             });
 
             resultsContainer.appendChild(card);

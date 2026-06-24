@@ -1,6 +1,6 @@
-// CONFIGURAZIONE DEFINITIVA SCORPION PULSE
+// CONFIGURAZIONE REALE STRUTTURATA - SCORPION PULSE
 const firebaseConfig = {
-    apiKey: "AIzaSyAh0MqbdbamcTKda38tGU2H09W8rGnmzU", 
+    apiKey: "AIzaSyAh0Mqbd_bamcTKda38tGU2H09W8rGnmzU",
     authDomain: "scorpionpulse-b660f.firebaseapp.com",
     projectId: "scorpionpulse-b660f",
     storageBucket: "scorpionpulse-b660f.firebasestorage.app",
@@ -9,15 +9,15 @@ const firebaseConfig = {
     measurementId: "G-0RQ94CYRSJ"
 };
 
-// Inizializzazione controllata
+// Inizializzazione sicura dei servizi compatibili
 try {
     firebase.initializeApp(firebaseConfig);
-    console.log("🔥 Firebase Scorpion Pulse inizializzato correttamente!");
+    console.log("🔥 Firebase caricato ed emesso con successo su Scorpion Pulse!");
 } catch (error) {
-    console.error("❌ Errore durante l'inizializzazione:", error);
+    console.error("❌ Errore critico di inizializzazione Firebase:", error);
 }
 
-// Esportazione dei servizi globali
+// Globalizzazione delle variabili per i form di login e registrazione
 const auth = firebase.auth();
 const db = firebase.firestore();
 const provider = new firebase.auth.GoogleAuthProvider();

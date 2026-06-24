@@ -143,6 +143,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    
     <script src="firebase-loader.js"></script>
 </head>
 <body>
@@ -182,8 +183,8 @@
         <p class="footer-text">Hai già un account? <a href="login.html">Accedi qui</a></p>
     </div>
 
-   <script>
-        console.log("Script Registrazione Scorpion Pulse Attivo.");
+    <script>
+        console.log("Interfaccia di registrazione inizializzata.");
         
         const usernameInput = document.getElementById('reg-username');
         const passwordInput = document.getElementById('reg-password');
@@ -193,7 +194,7 @@
         const form = document.getElementById('register-form');
         const googleBtn = document.getElementById('btn-google-click');
 
-        // Controllo barra password robusta
+        // Monitoraggio tempo reale sicurezza password
         if (passwordInput && barra) {
             passwordInput.addEventListener('input', () => {
                 const val = passwordInput.value;
@@ -204,7 +205,7 @@
             });
         }
 
-        // Controllo live dell'username univoco su Firestore
+        // Verifica disponibilità nickname su Firestore
         if (usernameInput) {
             usernameInput.addEventListener('input', () => {
                 const username = usernameInput.value.trim().toLowerCase();
@@ -224,18 +225,18 @@
                                 if(errorDiv) errorDiv.style.display = "none"; 
                                 if(successDiv) successDiv.style.display = "block";
                             }
-                        }).catch((err) => { console.error("Errore Firestore:", err); });
+                        }).catch((err) => { console.error("Errore di comunicazione DB:", err); });
                 }
             });
         }
 
-        // Invio form finale per la registrazione utente
+        // Gestione evento submit del form
         if (form) {
             form.addEventListener('submit', (e) => {
                 e.preventDefault();
                 
                 if (typeof auth === 'undefined') {
-                    alert("Errore: Firebase non è stato caricato correttamente. Verifica la console.");
+                    alert("Errore di caricamento: i servizi di autenticazione non sono pronti.");
                     return;
                 }
 
@@ -244,7 +245,7 @@
                 const password = passwordInput.value;
 
                 if (errorDiv && errorDiv.style.display === "block") { 
-                    alert("Questo username non è disponibile!"); 
+                    alert("Cambia il tuo username prima di continuare!"); 
                     return; 
                 }
 
@@ -258,17 +259,17 @@
                         });
                     })
                     .then(() => {
-                        alert("Profilo creato con successo!");
+                        alert("Account configurato con successo!");
                         window.location.href = "login.html";
                     })
                     .catch((error) => { 
                         console.error(error);
-                        alert("Errore registrazione: " + error.message); 
+                        alert("Impossibile completare la registrazione: " + error.message); 
                     });
             });
         }
 
-        // Registrazione rapida popup Google
+        // Autenticazione federata con Google PopUp
         if (googleBtn) {
             googleBtn.addEventListener('click', () => {
                 if (typeof auth !== 'undefined' && typeof provider !== 'undefined') {
@@ -276,7 +277,7 @@
                         .then((result) => {
                             localStorage.setItem("usernameUtente", result.user.displayName);
                             window.location.href = "index.html";
-                        }).catch((err) => { console.warn("Finestra di autenticazione chiusa:", err.message); });
+                        }).catch((err) => { console.warn("Accesso annullato dall'utente:", err.message); });
                 }
             });
         }

@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Scorpion Pulse - Ultimate Mixtube</title>
     <style>
         :root {
@@ -17,6 +17,11 @@
             --player-bg: #0f0f11;
         }
 
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
         body {
             font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
             background-color: var(--bg-main);
@@ -28,7 +33,7 @@
             overflow: hidden;
         }
 
-        /* SIDEBAR */
+        /* SIDEBAR (PER DESKTOP) */
         .sidebar {
             width: 240px;
             background: var(--bg-sidebar);
@@ -37,7 +42,7 @@
             flex-direction: column;
             justify-content: space-between;
             padding: 24px;
-            box-sizing: border-box;
+            flex-shrink: 0;
         }
 
         .brand {
@@ -127,9 +132,9 @@
             flex: 1;
             display: flex;
             flex-direction: column;
-            padding: 32px 32px 120px 32px;
+            padding: 32px 32px 180px 32px;
             overflow-y: auto;
-            box-sizing: border-box;
+            -webkit-overflow-scrolling: touch;
         }
 
         .search-container {
@@ -145,8 +150,7 @@
             border: 1px solid var(--border);
             border-radius: 50px;
             color: white;
-            font-size: 1rem;
-            box-sizing: border-box;
+            font-size: 16px; /* Evita lo zoom automatico su iOS */
             transition: all 0.2s ease;
         }
 
@@ -163,26 +167,21 @@
             margin: 0 0 20px 0;
         }
 
-        /* GRIGLIA BRANI */
+        /* GRIGLIA RESPONSIVA PER SMARTPHONE */
         .results-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-            gap: 24px;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 16px;
         }
 
         .track-card {
             background: var(--bg-card);
-            padding: 16px;
+            padding: 12px;
             border-radius: 12px;
             border: 1px solid var(--border);
             cursor: pointer;
             transition: all 0.25s ease;
             position: relative;
-        }
-
-        .track-card:hover {
-            background: var(--bg-card-hover);
-            transform: translateY(-4px);
         }
 
         .track-cover {
@@ -191,80 +190,83 @@
             background-size: cover;
             background-position: center;
             border-radius: 8px;
-            margin-bottom: 14px;
+            margin-bottom: 10px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.5);
         }
 
         .track-title {
-            font-size: 0.95rem;
+            font-size: 0.9rem;
             font-weight: 600;
             margin-bottom: 4px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            padding-right: 24px;
+            padding-right: 20px;
         }
 
         .track-artist {
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             color: var(--text-muted);
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
 
-        /* BOTTONE LIKE */
         .like-btn {
             position: absolute;
-            bottom: 16px;
-            right: 16px;
+            bottom: 12px;
+            right: 12px;
             background: transparent;
             border: none;
             color: var(--text-muted);
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             cursor: pointer;
-            transition: color 0.2s, transform 0.1s;
             z-index: 10;
-        }
-
-        .like-btn:hover {
-            transform: scale(1.2);
+            padding: 4px;
         }
 
         .like-btn.liked {
             color: var(--primary);
         }
 
-        /* PLAYER BAR */
+        /* PLAYER BAR OTTIMIZZATA PER MOBILE */
         .player-bar {
             position: fixed;
             bottom: 0;
             left: 0;
             right: 0;
-            height: 90px;
+            height: 100px;
             background: var(--player-bg);
             border-top: 1px solid var(--border);
             display: none;
+            flex-direction: column;
+            justify-content: center;
+            padding: 12px 16px;
+            z-index: 100;
+            gap: 8px;
+        }
+
+        .player-top-row {
+            display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 0 32px;
-            box-sizing: border-box;
-            z-index: 100;
+            width: 100%;
         }
 
         .player-track-info {
             display: flex;
             align-items: center;
-            gap: 14px;
-            width: 30%;
+            gap: 12px;
+            width: 70%;
         }
 
         .player-mini-cover {
-            width: 56px;
-            height: 56px;
+            width: 44px;
+            height: 44px;
             border-radius: 6px;
             background-size: cover;
             background-position: center;
+            flex-shrink: 0;
         }
 
         .player-text-details {
@@ -272,35 +274,99 @@
         }
 
         .player-current-title {
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             font-weight: 600;
-            margin-bottom: 2px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
 
         .player-current-artist {
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             color: var(--text-muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .player-controls {
+            width: 100%;
             display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 8px;
-            width: 40%;
+            justify-content: center;
         }
 
         .audio-element {
             width: 100%;
-            max-width: 500px;
-            height: 32px;
+            height: 28px;
         }
 
-        audio::-webkit-media-controls-enclosure {
-            background-color: var(--player-bg);
+        /* NAVIGAZIONE INFERIORE PER TELEFONI (MOBILE BAR) */
+        .mobile-nav {
+            display: none;
+            position: fixed;
+            bottom: 100px; /* Sopra la barra del player */
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: var(--bg-sidebar);
+            border-top: 1px solid var(--border);
+            justify-content: space-around;
+            align-items: center;
+            z-index: 99;
+        }
+
+        .mobile-nav-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+        }
+
+        .mobile-nav-btn.active {
+            color: var(--primary);
+        }
+
+        /* 📱 RESPONSIVITÀ PER SMARTPHONE */
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+            }
+            .sidebar {
+                display: none; /* Nasconde la sidebar desktop */
+            }
+            .mobile-nav {
+                display: flex; /* Mostra la barra inferiore stile app */
+            }
+            .main-content {
+                padding: 16px 16px 180px 16px;
+            }
+            .results-grid {
+                grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+                gap: 12px;
+            }
+            .track-card {
+                padding: 8px;
+            }
+            .player-bar {
+                bottom: 0;
+                height: 100px;
+            }
+            .mobile-nav {
+                bottom: 100px; /* Si sposta sopra al player solo quando il player è attivo */
+            }
+            /* Se il player è nascosto, riposiziona la barra di navigazione in fondo */
+            body:not(.player-attivo) .mobile-nav {
+                bottom: 0;
+            }
+            body:not(.player-attivo) .main-content {
+                padding-bottom: 90px;
+            }
         }
     </style>
 
@@ -308,11 +374,11 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-    <script src="firebase-loader.js?v=2"></script>
+    <script src="firebase-loader.js?v=3"></script>
 </head>
 <body>
 
-    <!-- BARRA LATERALE -->
+    <!-- SIDEBAR DESKTOP -->
     <div class="sidebar">
         <div>
             <div class="brand">🦂 Scorpion<span>Pulse</span></div>
@@ -321,7 +387,6 @@
                 <button class="menu-btn" id="menu-favorites">💜 Preferiti</button>
             </div>
         </div>
-
         <div class="user-panel">
             <div class="user-name" id="display-user">Connessione...</div>
             <button class="logout-btn" id="btn-logout">Scollegati</button>
@@ -331,35 +396,56 @@
     <!-- CORPO PRINCIPALE -->
     <div class="main-content">
         <div class="search-container" id="search-box-wrapper">
-            <input type="text" class="search-bar" id="search-input" placeholder="Cerca canzoni o artisti (es. 'Milly', 'Shiva', 'Sfera')...">
+            <input type="text" class="search-bar" id="search-input" placeholder="Cerca canzoni o artisti...">
         </div>
-
         <h2 id="section-title">Classifiche Globali</h2>
         <div class="results-grid" id="results-container"></div>
     </div>
 
-    <!-- AUDIO PLAYER FISSO -->
+    <!-- COMPONENTE: BARRA DI NAVIGAZIONE MOBILE -->
+    <div class="mobile-nav">
+        <button class="mobile-nav-btn active" id="m-menu-dashboard">🎵 <span>Home</span></button>
+        <button class="mobile-nav-btn" id="m-menu-favorites">💜 <span>Preferiti</span></button>
+        <button class="mobile-nav-btn" id="m-btn-logout">🚪 <span>Esci</span></button>
+    </div>
+
+    <!-- AUDIO PLAYER FISSO COMPATTO -->
     <div class="player-bar" id="player-bar">
-        <div class="player-track-info">
-            <div class="player-mini-cover" id="p-cover"></div>
-            <div class="player-text-details">
-                <div class="player-current-title" id="p-title">Nessuna traccia</div>
-                <div class="player-current-artist" id="p-artist">Scegli un brano</div>
+        <div class="player-top-row">
+            <div class="player-track-info">
+                <div class="player-mini-cover" id="p-cover"></div>
+                <div class="player-text-details">
+                    <div class="player-current-title" id="p-title">Nessuna traccia</div>
+                    <div class="player-current-artist" id="p-artist">Scegli un brano</div>
+                </div>
             </div>
         </div>
-
         <div class="player-controls">
-            <audio class="audio-element" id="audio-player" controls autoplay></audio>
+            <audio class="audio-element" id="audio-player" controls autoplay playsinline></audio>
         </div>
-        
-        <div style="width: 30%;"></div>
     </div>
 
     <script>
         let utenteCorrente = null;
         let preferitiIds = [];
+        let modalitaCorrente = "dashboard";
+        let timeoutRicerca = null;
 
-        // 1. CONF FIREBASE USER
+        const searchInput = document.getElementById('search-input');
+        const resultsContainer = document.getElementById('results-container');
+        const playerAudio = document.getElementById('audio-player');
+
+        // SBLOCCO AUTOMATICO DELL'AUDIO PER TELEFONI
+        document.addEventListener('DOMContentLoaded', () => {
+            if (localStorage.getItem('audio_unlocked') === 'true') {
+                playerAudio.play().catch(() => {
+                    console.log("In attesa del primo tocco utente per l'audio.");
+                });
+                localStorage.removeItem('audio_unlocked');
+            }
+        });
+
+        // 1. GESTIONE STATO UTENTE
         if (typeof auth !== 'undefined') {
             auth.onAuthStateChanged((user) => {
                 if (user) {
@@ -372,24 +458,17 @@
             });
         }
 
-        document.getElementById('btn-logout').addEventListener('click', () => {
-            if (typeof auth !== 'undefined') {
-                auth.signOut().then(() => { window.location.href = "login.html"; });
-            }
-        });
+        const logoutAzione = () => { if (typeof auth !== 'undefined') { auth.signOut().then(() => { window.location.href = "login.html"; }); } };
+        document.getElementById('btn-logout').addEventListener('click', logoutAzione);
+        document.getElementById('m-btn-logout').addEventListener('click', logoutAzione);
 
-        const searchInput = document.getElementById('search-input');
-        const resultsContainer = document.getElementById('results-container');
-        let timeoutRicerca = null;
-        let modalitaCorrente = "dashboard";
-
-        // Carica la Top Chart Mondiale iniziale da Deezer
+        // 2. MOTORE CARICAMENTO BRANI (DEEZER API)
         function caricaTopTracks() {
             if (modalitaCorrente !== "dashboard") return;
             resultsContainer.innerHTML = "<p style='color: var(--text-muted);'>Caricamento tracce...</p>";
             document.getElementById('section-title').innerText = "In Evidenza su Scorpion Pulse";
 
-            const urlDeezer = "https://api.deezer.com/chart/0/tracks&limit=12";
+            const urlDeezer = "https://api.deezer.com/chart/0/tracks&limit=16";
             fetch("https://corsproxy.io/?" + encodeURIComponent(urlDeezer))
                 .then(res => res.json())
                 .then(parsedData => {
@@ -400,36 +479,26 @@
                             creaCardMixtube(track.id, track.title, track.artist.name, track.album.cover_medium);
                         });
                     }
-                })
-                .catch(() => {
-                    resultsContainer.innerHTML = "<p style='color: var(--primary);'>Errore di sincronizzazione.</p>";
-                });
+                }).catch(() => { resultsContainer.innerHTML = "<p style='color: var(--primary);'>Errore di rete.</p>"; });
         }
 
-        // DEBOUNCE DI RICERCA LIVE (DEEZER ENGINE)
+        // MOTORE DI RICERCA LIVE CON EVENTO TOUCH PER TELEFONO
         searchInput.addEventListener('input', () => {
             clearTimeout(timeoutRicerca);
             const query = searchInput.value.trim();
-            
-            if (query.length === 0) { 
-                caricaTopTracks(); 
-                return; 
-            }
+            if (query.length === 0) { caricaTopTracks(); return; }
             if (query.length < 2) return;
 
             timeoutRicerca = setTimeout(() => { 
-                if(modalitaCorrente === "dashboard") {
-                    eseguiRicercaGlobaleDeezer(query); 
-                }
+                if(modalitaCorrente === "dashboard") eseguiRicercaGlobaleDeezer(query); 
             }, 300);
         });
 
         function eseguiRicercaGlobaleDeezer(chiave) {
             document.getElementById('section-title').innerText = "Risultati per: " + chiave;
-            resultsContainer.innerHTML = "<p style='color: var(--text-muted);'>Analisi database globale...</p>";
+            resultsContainer.innerHTML = "<p style='color: var(--text-muted);'>Cerca nel database...</p>";
 
             const urlSearch = `https://api.deezer.com/search?q=${encodeURIComponent(chiave)}&limit=24`;
-
             fetch("https://corsproxy.io/?" + encodeURIComponent(urlSearch))
                 .then(res => res.json())
                 .then(parsedData => {
@@ -441,57 +510,47 @@
                             contatore++;
                         });
                     }
-                    if (contatore === 0) {
-                        resultsContainer.innerHTML = "<p style='color: var(--primary);'>Nessun brano trovato.</p>";
-                    }
+                    if (contatore === 0) resultsContainer.innerHTML = "<p style='color: var(--primary);'>Nessun risultato.</p>";
                 });
         }
 
-        // COSTRUZIONE CARD
+        // 3. COSTRUZIONE DELLE CARD DELLA GRIGLIA
         function creaCardMixtube(id, titolo, artista, copertinaUrl) {
             const card = document.createElement('div');
             card.className = 'track-card';
-            
             const isLiked = preferitiIds.includes(String(id));
-            const cuoreClasse = isLiked ? "liked" : "";
             const cuoreIcona = isLiked ? "💜" : "🤍";
 
             card.innerHTML = `
                 <div class="track-cover" style="background-image: url('${copertinaUrl}')"></div>
                 <div class="track-title">${titolo}</div>
                 <div class="track-artist">${artista}</div>
-                <button class="like-btn ${cuoreClasse}" data-id="${id}">${cuoreIcona}</button>
+                <button class="like-btn ${isLiked ? 'liked' : ''}" data-id="${id}">${cuoreIcona}</button>
             `;
 
-            // STREAMING FULL AUDIO BRANO BYPASSANDO I LIMITI DI DEEZER VIA YOUTUBE/INVIDIOUS
+            // EVENTO SELEZIONE CANZONE (BYPASS ED ESTRAZIONE AUDIO STREAM)
             card.addEventListener('click', (e) => {
                 if (e.target.classList.contains('like-btn')) return;
 
-                // Mostra il player e aggiorna i dettagli grafici al volo
+                document.body.classList.add('player-attivo');
                 document.getElementById('player-bar').style.display = 'flex';
                 document.getElementById('p-cover').style.backgroundImage = `url('${copertinaUrl}')`;
                 document.getElementById('p-title').innerText = titolo;
                 document.getElementById('p-artist').innerText = artista;
 
-                const playerAudio = document.getElementById('audio-player');
-                
-                // Cerca la traccia su Invidious usando la combinazione esatta "Artista - Titolo"
+                // Query per agganciare lo stream audio raw da YouTube
                 const chiaveRicercaYoutube = `${artista} ${titolo}`;
-                
                 fetch(`https://invidious.projectsegfau.lt/api/v1/search?q=${encodeURIComponent(chiaveRicercaYoutube)}&type=video`)
                     .then(res => res.json())
                     .then(data => {
                         if (Array.isArray(data) && data.length > 0) {
-                            const videoId = data[0].videoId; // Prende il primo risultato più rilevante
-                            // Estrae direttamente l'audio m4a e lo lancia nel player
+                            const videoId = data[0].videoId;
                             playerAudio.src = `https://invidious.projectsegfau.lt/latest_version?id=${videoId}&itag=140`;
-                            playerAudio.play();
-                        } else {
-                            alert("Impossibile caricare il flusso audio completo per questo brano.");
+                            playerAudio.play().catch(() => {
+                                // Fall-back in caso di blocco di autoplay residuo su mobile
+                                playerAudio.controls = true;
+                            });
                         }
-                    })
-                    .catch(() => {
-                        console.error("Errore nel recupero della sorgente audio.");
                     });
             });
 
@@ -504,31 +563,14 @@
             resultsContainer.appendChild(card);
         }
 
-        // GESTIONE DATABASE PREFERITI
+        // 4. PERSISTENZA CLOUD PREFERITI (FIRESTORE)
         function caricaPreferitiUtente() {
             if (!window.db || !utenteCorrente) return;
-
             db.collection("users").doc(utenteCorrente.uid).collection("favorites")
                 .onSnapshot((snapshot) => {
                     preferitiIds = [];
-                    snapshot.forEach(doc => {
-                        preferitiIds.push(String(doc.id));
-                    });
-                    
-                    if (modalitaCorrente === "preferiti") {
-                        mostraSchermataPreferiti();
-                    } else {
-                        document.querySelectorAll('.like-btn').forEach(btn => {
-                            const id = String(btn.getAttribute('data-id'));
-                            if (preferitiIds.includes(id)) {
-                                btn.classList.add('liked');
-                                btn.innerText = "💜";
-                            } else {
-                                btn.classList.remove('liked');
-                                btn.innerText = "🤍";
-                            }
-                        });
-                    }
+                    snapshot.forEach(doc => preferitiIds.push(String(doc.id)));
+                    if (modalitaCorrente === "preferiti") mostraSchermataPreferiti();
                 });
         }
 
@@ -537,67 +579,4 @@
             const docRef = db.collection("users").doc(utenteCorrente.uid).collection("favorites").doc(String(id));
 
             if (preferitiIds.includes(String(id))) {
-                docRef.delete().then(() => {
-                    bottone.classList.remove('liked');
-                    bottone.innerText = "🤍";
-                });
-            } else {
-                docRef.set({
-                    id: id,
-                    title: titolo,
-                    artist: artista,
-                    coverUrl: copertinaUrl,
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                }).then(() => {
-                    bottone.classList.add('liked');
-                    bottone.innerText = "💜";
-                });
-            }
-        }
-
-        function mostraSchermataPreferiti() {
-            document.getElementById('section-title').innerText = "I tuoi brani Preferiti 💜";
-            resultsContainer.innerHTML = "";
-
-            if (preferitiIds.length === 0) {
-                resultsContainer.innerHTML = "<p style='color: var(--text-muted);'>Lista preferiti vuota.</p>";
-                return;
-            }
-
-            db.collection("users").doc(utenteCorrente.uid).collection("favorites").orderBy("timestamp", "desc")
-                .get()
-                .then(snapshot => {
-                    if (modalitaCorrente !== "preferiti") return;
-                    resultsContainer.innerHTML = "";
-                    snapshot.forEach(doc => {
-                        const data = doc.data();
-                        creaCardMixtube(data.id, data.title, data.artist, data.coverUrl);
-                    });
-                });
-        }
-
-        // NAVIGAZIONE INTERFACCIA
-        const btnDashboard = document.getElementById('menu-dashboard');
-        const btnFavorites = document.getElementById('menu-favorites');
-        const searchBoxWrapper = document.getElementById('search-box-wrapper');
-
-        btnDashboard.addEventListener('click', () => {
-            modalitaCorrente = "dashboard";
-            btnFavorites.classList.remove('active');
-            btnDashboard.classList.add('active');
-            searchBoxWrapper.style.display = "block";
-            caricaTopTracks();
-        });
-
-        btnFavorites.addEventListener('click', () => {
-            modalitaCorrente = "preferiti";
-            btnDashboard.classList.remove('active');
-            btnFavorites.classList.add('active');
-            searchBoxWrapper.style.display = "none";
-            mostraSchermataPreferiti();
-        });
-
-        setTimeout(() => { caricaTopTracks(); }, 1000);
-    </script>
-</body>
-</html>
+                docRef.delete().then(() => { bottone.classList.remove('l

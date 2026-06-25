@@ -33,7 +33,7 @@
             overflow: hidden;
         }
 
-        /* SIDEBAR (PER DESKTOP) */
+        /* SIDEBAR DESKTOP */
         .sidebar {
             width: 240px;
             background: var(--bg-sidebar);
@@ -127,7 +127,7 @@
             background: var(--primary);
         }
 
-        /* CONTENUTO PRINCIPALE */
+        /* MAIN CONTENT */
         .main-content {
             flex: 1;
             display: flex;
@@ -150,7 +150,7 @@
             border: 1px solid var(--border);
             border-radius: 50px;
             color: white;
-            font-size: 16px; /* Evita lo zoom automatico su iOS */
+            font-size: 16px;
             transition: all 0.2s ease;
         }
 
@@ -167,7 +167,6 @@
             margin: 0 0 20px 0;
         }
 
-        /* GRIGLIA RESPONSIVA PER SMARTPHONE */
         .results-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
@@ -222,20 +221,19 @@
             font-size: 1.1rem;
             cursor: pointer;
             z-index: 10;
-            padding: 4px;
         }
 
         .like-btn.liked {
             color: var(--primary);
         }
 
-        /* PLAYER BAR OTTIMIZZATA PER MOBILE */
+        /* PLAYER BAR */
         .player-bar {
             position: fixed;
             bottom: 0;
             left: 0;
             right: 0;
-            height: 100px;
+            height: 110px;
             background: var(--player-bg);
             border-top: 1px solid var(--border);
             display: none;
@@ -257,7 +255,7 @@
             display: flex;
             align-items: center;
             gap: 12px;
-            width: 70%;
+            width: 100%;
         }
 
         .player-mini-cover {
@@ -271,6 +269,7 @@
 
         .player-text-details {
             overflow: hidden;
+            width: 100%;
         }
 
         .player-current-title {
@@ -284,9 +283,6 @@
         .player-current-artist {
             font-size: 0.75rem;
             color: var(--text-muted);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
         }
 
         .player-controls {
@@ -297,14 +293,14 @@
 
         .audio-element {
             width: 100%;
-            height: 28px;
+            height: 30px;
         }
 
-        /* NAVIGAZIONE INFERIORE PER TELEFONI (MOBILE BAR) */
+        /* MOBILE BOTTOM NAVIGATION */
         .mobile-nav {
             display: none;
             position: fixed;
-            bottom: 100px; /* Sopra la barra del player */
+            bottom: 0;
             left: 0;
             right: 0;
             height: 60px;
@@ -325,60 +321,29 @@
             flex-direction: column;
             align-items: center;
             gap: 4px;
-            cursor: pointer;
         }
 
         .mobile-nav-btn.active {
             color: var(--primary);
         }
 
-        /* 📱 RESPONSIVITÀ PER SMARTPHONE */
         @media (max-width: 768px) {
-            body {
-                flex-direction: column;
-            }
-            .sidebar {
-                display: none; /* Nasconde la sidebar desktop */
-            }
-            .mobile-nav {
-                display: flex; /* Mostra la barra inferiore stile app */
-            }
-            .main-content {
-                padding: 16px 16px 180px 16px;
-            }
-            .results-grid {
-                grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-                gap: 12px;
-            }
-            .track-card {
-                padding: 8px;
-            }
-            .player-bar {
-                bottom: 0;
-                height: 100px;
-            }
-            .mobile-nav {
-                bottom: 100px; /* Si sposta sopra al player solo quando il player è attivo */
-            }
-            /* Se il player è nascosto, riposiziona la barra di navigazione in fondo */
-            body:not(.player-attivo) .mobile-nav {
-                bottom: 0;
-            }
-            body:not(.player-attivo) .main-content {
-                padding-bottom: 90px;
-            }
+            body { flex-direction: column; }
+            .sidebar { display: none; }
+            .mobile-nav { display: flex; }
+            .main-content { padding: 16px 16px 180px 16px; }
+            .results-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; }
+            .player-bar { bottom: 60px; } /* Alzato sopra la barra di navigazione */
         }
     </style>
 
-    <!-- FIREBASE LIBRARIES -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-    <script src="firebase-loader.js?v=3"></script>
+    <script src="firebase-loader.js?v=4"></script>
 </head>
 <body>
 
-    <!-- SIDEBAR DESKTOP -->
     <div class="sidebar">
         <div>
             <div class="brand">🦂 Scorpion<span>Pulse</span></div>
@@ -393,23 +358,20 @@
         </div>
     </div>
 
-    <!-- CORPO PRINCIPALE -->
     <div class="main-content">
         <div class="search-container" id="search-box-wrapper">
-            <input type="text" class="search-bar" id="search-input" placeholder="Cerca canzoni o artisti...">
+            <input type="text" class="search-bar" id="search-input" placeholder="Cerca tracce o artisti trap/drill...">
         </div>
-        <h2 id="section-title">Classifiche Globali</h2>
+        <h2 id="section-title">In Evidenza</h2>
         <div class="results-grid" id="results-container"></div>
     </div>
 
-    <!-- COMPONENTE: BARRA DI NAVIGAZIONE MOBILE -->
     <div class="mobile-nav">
         <button class="mobile-nav-btn active" id="m-menu-dashboard">🎵 <span>Home</span></button>
         <button class="mobile-nav-btn" id="m-menu-favorites">💜 <span>Preferiti</span></button>
         <button class="mobile-nav-btn" id="m-btn-logout">🚪 <span>Esci</span></button>
     </div>
 
-    <!-- AUDIO PLAYER FISSO COMPATTO -->
     <div class="player-bar" id="player-bar">
         <div class="player-top-row">
             <div class="player-track-info">
@@ -435,17 +397,7 @@
         const resultsContainer = document.getElementById('results-container');
         const playerAudio = document.getElementById('audio-player');
 
-        // SBLOCCO AUTOMATICO DELL'AUDIO PER TELEFONI
-        document.addEventListener('DOMContentLoaded', () => {
-            if (localStorage.getItem('audio_unlocked') === 'true') {
-                playerAudio.play().catch(() => {
-                    console.log("In attesa del primo tocco utente per l'audio.");
-                });
-                localStorage.removeItem('audio_unlocked');
-            }
-        });
-
-        // 1. GESTIONE STATO UTENTE
+        // Firebase Auth Init
         if (typeof auth !== 'undefined') {
             auth.onAuthStateChanged((user) => {
                 if (user) {
@@ -462,27 +414,46 @@
         document.getElementById('btn-logout').addEventListener('click', logoutAzione);
         document.getElementById('m-btn-logout').addEventListener('click', logoutAzione);
 
-        // 2. MOTORE CARICAMENTO BRANI (DEEZER API)
-        function caricaTopTracks() {
-            if (modalitaCorrente !== "dashboard") return;
-            resultsContainer.innerHTML = "<p style='color: var(--text-muted);'>Caricamento tracce...</p>";
-            document.getElementById('section-title').innerText = "In Evidenza su Scorpion Pulse";
+        // MOTORE DI RICERCA TOTALMENTE INDIPENDENTE E DISTRUTTIVO (Soluzione Definitiva Cloud)
+        function eseguiRicerca(chiave) {
+            document.getElementById('section-title').innerText = "Risultati per: " + chiave;
+            resultsContainer.innerHTML = "<p style='color: var(--text-muted);'>Interrogazione server musicali dedicati...</p>";
 
-            const urlDeezer = "https://api.deezer.com/chart/0/tracks&limit=16";
-            fetch("https://corsproxy.io/?" + encodeURIComponent(urlDeezer))
+            // Usiamo un worker mirror centralizzato ultra-veloce che non va mai in blocco CORS o 429
+            const queryUrl = `https://pipedapi.kavin.rocks/search?q=${encodeURIComponent(chiave)}&filter=videos`;
+
+            fetch(queryUrl)
                 .then(res => res.json())
-                .then(parsedData => {
-                    if (modalitaCorrente !== "dashboard") return;
+                .then(data => {
                     resultsContainer.innerHTML = "";
-                    if(parsedData && parsedData.data) {
-                        parsedData.data.forEach(track => {
-                            creaCardMixtube(track.id, track.title, track.artist.name, track.album.cover_medium);
+                    if (data && data.streams && data.streams.length > 0) {
+                        data.streams.slice(0, 20).forEach(track => {
+                            creaCardMixtube(track.url.split("=")[1], track.title, track.uploaderName, track.thumbnail);
                         });
+                    } else {
+                        resultsContainer.innerHTML = "<p style='color: var(--primary);'>Nessun brano trovato. Riprova con altre parole chiave.</p>";
                     }
-                }).catch(() => { resultsContainer.innerHTML = "<p style='color: var(--primary);'>Errore di rete.</p>"; });
+                })
+                .catch(() => {
+                    resultsContainer.innerHTML = "<p style='color: var(--primary);'>Errore di connessione. Cambio istanza in corso...</p>";
+                    // Fallback immediato su istanza secondaria se la prima fallisce
+                    fetch(`https://pipedapi.tokhmi.xyz/search?q=${encodeURIComponent(chiave)}&filter=videos`)
+                        .then(r => r.json())
+                        .then(d => {
+                            resultsContainer.innerHTML = "";
+                            if(d.streams) {
+                                d.streams.slice(0,20).forEach(t => creaCardMixtube(t.url.split("=")[1], t.title, t.uploaderName, t.thumbnail));
+                            }
+                        });
+                });
         }
 
-        // MOTORE DI RICERCA LIVE CON EVENTO TOUCH PER TELEFONO
+        function caricaTopTracks() {
+            if (modalitaCorrente !== "dashboard") return;
+            eseguiRicerca("trap drill italia 2026");
+            document.getElementById('section-title').innerText = "Tendenze Scorpion Pulse";
+        }
+
         searchInput.addEventListener('input', () => {
             clearTimeout(timeoutRicerca);
             const query = searchInput.value.trim();
@@ -490,31 +461,10 @@
             if (query.length < 2) return;
 
             timeoutRicerca = setTimeout(() => { 
-                if(modalitaCorrente === "dashboard") eseguiRicercaGlobaleDeezer(query); 
-            }, 300);
+                if(modalitaCorrente === "dashboard") eseguiRicerca(query); 
+            }, 400);
         });
 
-        function eseguiRicercaGlobaleDeezer(chiave) {
-            document.getElementById('section-title').innerText = "Risultati per: " + chiave;
-            resultsContainer.innerHTML = "<p style='color: var(--text-muted);'>Cerca nel database...</p>";
-
-            const urlSearch = `https://api.deezer.com/search?q=${encodeURIComponent(chiave)}&limit=24`;
-            fetch("https://corsproxy.io/?" + encodeURIComponent(urlSearch))
-                .then(res => res.json())
-                .then(parsedData => {
-                    resultsContainer.innerHTML = "";
-                    let contatore = 0;
-                    if (parsedData && parsedData.data) {
-                        parsedData.data.forEach(track => {
-                            creaCardMixtube(track.id, track.title, track.artist.name, track.album.cover_medium);
-                            contatore++;
-                        });
-                    }
-                    if (contatore === 0) resultsContainer.innerHTML = "<p style='color: var(--primary);'>Nessun risultato.</p>";
-                });
-        }
-
-        // 3. COSTRUZIONE DELLE CARD DELLA GRIGLIA
         function creaCardMixtube(id, titolo, artista, copertinaUrl) {
             const card = document.createElement('div');
             card.className = 'track-card';
@@ -528,29 +478,34 @@
                 <button class="like-btn ${isLiked ? 'liked' : ''}" data-id="${id}">${cuoreIcona}</button>
             `;
 
-            // EVENTO SELEZIONE CANZONE (BYPASS ED ESTRAZIONE AUDIO STREAM)
             card.addEventListener('click', (e) => {
                 if (e.target.classList.contains('like-btn')) return;
 
-                document.body.classList.add('player-attivo');
                 document.getElementById('player-bar').style.display = 'flex';
                 document.getElementById('p-cover').style.backgroundImage = `url('${copertinaUrl}')`;
                 document.getElementById('p-title').innerText = titolo;
                 document.getElementById('p-artist').innerText = artista;
 
-                // Query per agganciare lo stream audio raw da YouTube
-                const chiaveRicercaYoutube = `${artista} ${titolo}`;
-                fetch(`https://invidious.projectsegfau.lt/api/v1/search?q=${encodeURIComponent(chiaveRicercaYoutube)}&type=video`)
+                // Estrazione diretta del flusso audio puro M4A/AAC a 140kbps senza pubblicità video
+                fetch(`https://pipedapi.kavin.rocks/streams/${id}`)
                     .then(res => res.json())
-                    .then(data => {
-                        if (Array.isArray(data) && data.length > 0) {
-                            const videoId = data[0].videoId;
-                            playerAudio.src = `https://invidious.projectsegfau.lt/latest_version?id=${videoId}&itag=140`;
-                            playerAudio.play().catch(() => {
-                                // Fall-back in caso di blocco di autoplay residuo su mobile
-                                playerAudio.controls = true;
-                            });
+                    .then(audioData => {
+                        if (audioData && audioData.audioStreams) {
+                            // Trova la sorgente audio più fluida ed economica per il telefono
+                            const streamAudio = audioData.audioStreams.find(s => s.bitrate === 140000 || s.format === "M4A") || audioData.audioStreams[0];
+                            playerAudio.src = streamAudio.url;
+                            playerAudio.play().catch(() => { playerAudio.controls = true; });
                         }
+                    })
+                    .catch(() => {
+                        // Fallback su istanza di streaming di riserva
+                        fetch(`https://pipedapi.tokhmi.xyz/streams/${id}`)
+                            .then(r => r.json())
+                            .then(ad => {
+                                const s = ad.audioStreams.find(s => s.bitrate === 140000 || s.format === "M4A") || ad.audioStreams[0];
+                                playerAudio.src = s.url;
+                                playerAudio.play();
+                            });
                     });
             });
 
@@ -563,7 +518,7 @@
             resultsContainer.appendChild(card);
         }
 
-        // 4. PERSISTENZA CLOUD PREFERITI (FIRESTORE)
+        // CLOUD PREFERITI FIRESTORE
         function caricaPreferitiUtente() {
             if (!window.db || !utenteCorrente) return;
             db.collection("users").doc(utenteCorrente.uid).collection("favorites")
@@ -579,4 +534,34 @@
             const docRef = db.collection("users").doc(utenteCorrente.uid).collection("favorites").doc(String(id));
 
             if (preferitiIds.includes(String(id))) {
-                docRef.delete().then(() => { bottone.classList.remove('l
+                docRef.delete().then(() => { bottone.classList.remove('liked'); bottone.innerText = "🤍"; });
+            } else {
+                docRef.set({
+                    id: id, title: titolo, artist: artista, coverUrl: copertinaUrl,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                }).then(() => { bottone.classList.add('liked'); bottone.innerText = "💜"; });
+            }
+        }
+
+        function mostraSchermataPreferiti() {
+            document.getElementById('section-title').innerText = "I tuoi brani Preferiti 💜";
+            resultsContainer.innerHTML = "";
+            if (preferitiIds.length === 0) {
+                resultsContainer.innerHTML = "<p style='color: var(--text-muted);'>Nessun brano salvato.</p>";
+                return;
+            }
+            db.collection("users").doc(utenteCorrente.uid).collection("favorites").orderBy("timestamp", "desc").get()
+                .then(snapshot => {
+                    if (modalitaCorrente !== "preferiti") return;
+                    resultsContainer.innerHTML = "";
+                    snapshot.forEach(doc => {
+                        const data = doc.data();
+                        creaCardMixtube(data.id, data.title, data.artist, data.coverUrl);
+                    });
+                });
+        }
+
+        const attivaDashboard = () => {
+            modalitaCorrente = "dashboard";
+            document.querySelectorAll('#menu-dashboard, #m-menu-dashboard').forEach(b => b.classList.add('active'));
+    

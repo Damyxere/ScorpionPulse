@@ -233,7 +233,7 @@
             color: var(--primary);
         }
 
-        /* PLAYER BAR */
+        /* PLAYER BAR CON EMBDED STREAM FLUIDO */
         .player-bar {
             position: fixed;
             bottom: 0;
@@ -243,30 +243,23 @@
             background: var(--player-bg);
             border-top: 1px solid var(--border);
             display: none;
-            flex-direction: column;
-            justify-content: center;
-            padding: 12px 16px;
-            z-index: 100;
-            gap: 8px;
-        }
-
-        .player-top-row {
-            display: flex;
+            flex-direction: row;
             align-items: center;
             justify-content: space-between;
-            width: 100%;
+            padding: 12px 24px;
+            z-index: 100;
         }
 
         .player-track-info {
             display: flex;
             align-items: center;
             gap: 12px;
-            width: 100%;
+            max-width: 40%;
         }
 
         .player-mini-cover {
-            width: 44px;
-            height: 44px;
+            width: 54px;
+            height: 54px;
             border-radius: 6px;
             background-size: cover;
             background-position: center;
@@ -275,11 +268,10 @@
 
         .player-text-details {
             overflow: hidden;
-            width: 100%;
         }
 
         .player-current-title {
-            font-size: 0.85rem;
+            font-size: 0.9rem;
             font-weight: 600;
             white-space: nowrap;
             overflow: hidden;
@@ -287,22 +279,28 @@
         }
 
         .player-current-artist {
-            font-size: 0.75rem;
+            font-size: 0.8rem;
             color: var(--text-muted);
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
 
+        /* PLAYER VIDEO INTEGRATO COMPATTO */
         .player-controls {
-            width: 100%;
+            flex: 1;
             display: flex;
-            justify-content: center;
+            justify-content: flex-end;
+            max-width: 320px;
+            height: 60px;
+            border-radius: 8px;
+            overflow: hidden;
         }
 
-        .audio-element {
+        .youtube-iframe {
             width: 100%;
-            height: 30px;
+            height: 100%;
+            border: none;
         }
 
         /* MOBILE BOTTOM NAVIGATION */
@@ -343,7 +341,9 @@
             .mobile-nav { display: flex; }
             .main-content { padding: 16px 16px 180px 16px; }
             .results-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; }
-            .player-bar { bottom: 60px; }
+            .player-bar { bottom: 60px; flex-direction: column; height: 140px; padding: 10px; gap: 8px; justify-content: center;}
+            .player-track-info { max-width: 100%; width: 100%; }
+            .player-controls { max-width: 100%; width: 100%; height: 50px; }
         }
     </style>
 
@@ -383,18 +383,15 @@
     </div>
 
     <div class="player-bar" id="player-bar">
-        <div class="player-top-row">
-            <div class="player-track-info">
-                <div class="player-mini-cover" id="p-cover"></div>
-                <div class="player-text-details">
-                    <div class="player-current-title" id="p-title">Nessuna traccia</div>
-                    <div class="player-current-artist" id="p-artist">Scegli un brano</div>
-                </div>
+        <div class="player-track-info">
+            <div class="player-mini-cover" id="p-cover"></div>
+            <div class="player-text-details">
+                <div class="player-current-title" id="p-title">Nessuna traccia</div>
+                <div class="player-current-artist" id="p-artist">Scegli un brano</div>
             </div>
         </div>
-        <div class="player-controls">
-            <audio class="audio-element" id="audio-player" controls autoplay playsinline></audio>
-        </div>
+        <div class="player-controls" id="player-engine-container">
+            </div>
     </div>
 
     <script>
@@ -403,17 +400,16 @@
         let modalitaCorrente = "dashboard";
         let timeoutRicerca = null;
 
-        // INVIDIOUS NETWORK - I nodi API più veloci e stabili usati dai bot musicali
-        const istanzeInvidious = [
+        // Istanze di Invidious ultra-veloci ottimizzate per la ricerca JSON
+        const nodiRicerca = [
             "https://invidious.flokinet.to",
             "https://iv.melmac.space",
-            "https://invidious.perennialte.ch",
-            "https://vid.puffyan.us"
+            "https://invidious.perennialte.ch"
         ];
 
         const searchInput = document.getElementById('search-input');
         const resultsContainer = document.getElementById('results-container');
-        const playerAudio = document.getElementById('audio-player');
+        const engineContainer = document.getElementById('player-engine-container');
 
         if (typeof auth !== 'undefined') {
             auth.onAuthStateChanged((user) => {
@@ -431,33 +427,28 @@
         document.getElementById('btn-logout').addEventListener('click', logoutAzione);
         document.getElementById('m-btn-logout').addEventListener('click', logoutAzione);
 
-        // ENGINE DI RICERCA INVIDIOUS CON AUTOSWITCH IN CASO DI BLOCCO
+        // RICERCA ROBUSTA
         function eseguiRicerca(chiave, indexNode = 0) {
-            if (indexNode >= istanzeInvidious.length) {
-                resultsContainer.innerHTML = "<p style='color: var(--primary);'>I nodi di sblocco sono momentaneamente sovraccarichi. Riprova tra un attimo.</p>";
+            if (indexNode >= nodiRicerca.length) {
+                resultsContainer.innerHTML = "<p style='color: var(--primary);'>Errore di sincronizzazione dei database musicali. Riprova.</p>";
                 return;
             }
 
             if (indexNode === 0) {
                 document.getElementById('section-title').innerText = "Risultati per: " + chiave;
-                resultsContainer.innerHTML = "<p style='color: var(--text-muted);'>Connessione al server di sblocco in corso...</p>";
+                resultsContainer.innerHTML = "<p style='color: var(--text-muted);'>Allineamento canali in corso...</p>";
             }
 
-            const urlInvidious = `${istanzeInvidious[indexNode]}/api/v1/search?q=${encodeURIComponent(chiave)}&type=video`;
-
-            fetch(urlInvidious)
-                .then(res => {
-                    if(!res.ok) throw new Error("Nodo offline");
-                    return res.json();
-                })
+            fetch(`${nodiRicerca[indexNode]}/api/v1/search?q=${encodeURIComponent(chiave)}&type=video`)
+                .then(res => { if(!res.ok) throw new Error(); return res.json(); })
                 .then(data => {
                     if (data && data.length > 0) {
                         resultsContainer.innerHTML = "";
-                        data.slice(0, 20).forEach(video => {
+                        data.slice(0, 24).forEach(video => {
                             const id = video.videoId;
                             const titolo = video.title;
                             const artista = video.author;
-                            const copertinaUrl = video.videoThumbnails?.find(t => t.quality === "high")?.url || `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
+                            const copertinaUrl = `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
                             
                             creaCardMixtube(id, titolo, artista, copertinaUrl);
                         });
@@ -466,14 +457,13 @@
                     }
                 })
                 .catch(() => {
-                    console.log(`Nodo ${istanzeInvidious[indexNode]} fallito. Tento il successivo...`);
                     eseguiRicerca(chiave, indexNode + 1);
                 });
         }
 
         function caricaTopTracks() {
             if (modalitaCorrente !== "dashboard") return;
-            eseguiRicerca("Skinny Shiva Sfera");
+            eseguiRicerca("Skinny Shiva Sfera Ebbasta");
             document.getElementById('section-title').innerText = "In Evidenza su Scorpion Pulse";
         }
 
@@ -485,10 +475,10 @@
 
             timeoutRicerca = setTimeout(() => { 
                 if(modalitaCorrente === "dashboard") eseguiRicerca(query); 
-            }, 600);
+            }, 500);
         });
 
-        // GENERATORE DI CARD CON DECRIPTAZIONE FLUSSO AUDIO DIRETTO
+        // GENERATORE SCHEDE MUSICALI CON EMBED CORAZZATO ANTI-BLOCCO (SENZA BLOCCO 39 SECONDI)
         function creaCardMixtube(id, titolo, artista, copertinaUrl) {
             const card = document.createElement('div');
             card.className = 'track-card';
@@ -510,26 +500,14 @@
                 document.getElementById('p-title').innerText = titolo;
                 document.getElementById('p-artist').innerText = artista;
 
-                // RIPRODUZIONE AUDIO DIRETTA SENZA PROXY INTERMEDIARI INTERROTTI
-                const riproduciAudioDaInvidious = (nodeIdx = 0) => {
-                    if (nodeIdx >= istanzeInvidious.length) {
-                        // Soluzione estrema di riserva se tutti i nodi API falliscono lo stream audio
-                        playerAudio.src = `https://www.youtube.com/embed/${id}?autoplay=1&迫=1`;
-                        return;
-                    }
-
-                    // Invidious espone direttamente l'URL di streaming pulito bypassando i blocchi firma di YouTube
-                    const streamUrl = `${istanzeInvidious[nodeIdx]}/latest_version?id=${id}&itag=140`; // itag 140 = Audio AAC M4A puro ad alta qualità
-                    
-                    playerAudio.src = streamUrl;
-                    playerAudio.play()
-                        .catch(() => {
-                            // Se la riproduzione diretta fallisce (es. blocco del server), prova il nodo successivo
-                            riproduciAudioDaInvidious(nodeIdx + 1);
-                        });
-                };
-
-                riproduciAudioDaInvidious(0);
+                // Iniettiamo l'Iframe con i parametri ottimali per lo streaming continuo
+                // Usiamo youtube-nocookie per massimizzare la compatibilità e scavalcare i blocchi regionali delle istanze pubbliche
+                engineContainer.innerHTML = `
+                    <iframe class="youtube-iframe" 
+                            src="https://www.youtube-nocookie.com/embed/${id}?autoplay=1&modestbranding=1&rel=0&showinfo=0&iv_load_policy=3" 
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                            allowfullscreen>
+                    </iframe>`;
             });
 
             const btnLike = card.querySelector('.like-btn');
@@ -578,3 +556,19 @@
                     resultsContainer.innerHTML = "";
                     snapshot.forEach(doc => {
                         const data = doc.data();
+                        creaCardMixtube(data.id, data.title, data.artist, data.coverUrl);
+                    });
+                });
+        }
+
+        const attivaDashboard = () => {
+            modalitaCorrente = "dashboard";
+            document.querySelectorAll('#menu-dashboard, #m-menu-dashboard').forEach(b => b.classList.add('active'));
+            document.querySelectorAll('#menu-favorites, #m-menu-favorites').forEach(b => b.classList.remove('active'));
+            document.getElementById('search-box-wrapper').style.display = "block";
+            caricaTopTracks();
+        };
+
+        const attivaPreferiti = () => {
+            modalitaCorrente = "preferiti";
+            document.querySelectorAll('#menu-dashboard, #

@@ -356,7 +356,7 @@
 
     <div class="sidebar">
         <div>
-            <div class="brand">🦂 Scorpion<span>Pulse</span></div>
+            <div class="brand"> Scorpion<span>Pulse</span></div>
             <div class="menu-group">
                 <button class="menu-btn active" id="menu-dashboard">🎵 Dashboard</button>
                 <button class="menu-btn" id="menu-favorites">💜 Preferiti</button>
@@ -403,8 +403,8 @@
         let modalitaCorrente = "dashboard";
         let timeoutRicerca = null;
 
-        // Lista ordinata delle istanze API più stabili del network globale
-        const istanzeAPI = [
+        // Lista di fallback dei server audio Piped
+        const istanzeAudio = [
             "https://piped-api.garudalinux.org",
             "https://api.piped.yt",
             "https://pipedapi.oxit.co"
@@ -414,17 +414,6 @@
         const resultsContainer = document.getElementById('results-container');
         const playerAudio = document.getElementById('audio-player');
 
-        // SBLOCCO AUDIO AUTOMATICO MOBILE
-        document.addEventListener('DOMContentLoaded', () => {
-            if (localStorage.getItem('audio_unlocked') === 'true') {
-                playerAudio.play().catch(() => {
-                    console.log("In attesa di interazione per l'audio.");
-                });
-                localStorage.removeItem('audio_unlocked');
-            }
-        });
-
-        // 1. GESTIONE AUTENTICAZIONE
         if (typeof auth !== 'undefined') {
             auth.onAuthStateChanged((user) => {
                 if (user) {
@@ -441,47 +430,91 @@
         document.getElementById('btn-logout').addEventListener('click', logoutAzione);
         document.getElementById('m-btn-logout').addEventListener('click', logoutAzione);
 
-        // 2. SISTEMA DI INTERROGAZIONE AD ALTA DISPONIBILITÀ (ROTATION ENGINE)
-        function eseguiRicerca(chiave, indiceIstanza = 0) {
-            if (indiceIstanza >= istanzeAPI.length) {
-                resultsContainer.innerHTML = "<p style='color: var(--primary);'>Tutti i server musicali sono occupati. Riprova tra pochi secondi.</p>";
-                return;
-            }
+        // NUOVO MOTORE DI RICERCA DIRETTO (BYPASSA I BLOCCHI PIPED)
+        function eseguiRicerca(chiave) {
+            document.getElementById('section-title').innerText = "Risultati per: " + chiave;
+            resultsContainer.innerHTML = "<p style='color: var(--text-muted);'>Interrogazione database YouTube...</p>";
 
-            if (indiceIstanza === 0) {
-                document.getElementById('section-title').innerText = "Risultati per: " + chiave;
-                resultsContainer.innerHTML = "<p style='color: var(--text-muted);'>Scansione database globale in corso...</p>";
-            }
+            // Utilizziamo un proxy CORS ed effettuiamo lo scraping pulito della ricerca YouTube nativa
+            const urlScraping = `https://api.allorigins.win/get?url=${encodeURIComponent('https://www.youtube.com/results?search_query=' + encodeURIComponent(chiave) + '&sp=EgIQAQ%253D%253D')}`;
 
-            const urlCompleto = `${istanzeAPI[indiceIstanza]}/search?q=${encodeURIComponent(chiave)}&filter=videos`;
-
-            fetch(urlCompleto)
-                .then(res => res.json())
+            fetch(urlScraping)
+                .then(res => {
+                    if (!res.ok) throw new Error();
+                    return res.json();
+                })
                 .then(data => {
                     resultsContainer.innerHTML = "";
-                    if (data && data.streams && data.streams.length > 0) {
-                        data.streams.slice(0, 24).forEach(track => {
-                            const videoId = track.url.split("=")[1] || track.url.split("/").pop();
-                            creaCardMixtube(videoId, track.title, track.uploaderName, track.thumbnail);
-                        });
+                    const htmlContent = data.contents;
+                    
+                    // Regex avanzata per estrarre i dati dei video dall'oggettoytInitialData di YouTube
+                    const regexData = /ytInitialData\s*=\s*({.+?});/;
+                    const match = htmlContent.match(regexData);
+
+                    if (match && match[1]) {
+                        const jsonData = JSON.parse(match[1]);
+                        const contents = jsonData.contents?.twoColumnSearchResultsRenderer?.primaryContents?.sectionListRenderer?.contents[0]?.itemSectionRenderer?.contents;
+                        
+                        if (contents && contents.length > 0) {
+                            let trovati = 0;
+                            contents.forEach(item => {
+                                const videoRenderer = item.videoRenderer;
+                                if (videoRenderer && videoRenderer.videoId) {
+                                    const id = videoRenderer.videoId;
+                                    const titolo = videoRenderer.title?.runs[0]?.text || "Traccia Senza Titolo";
+                                    const artista = videoRenderer.ownerText?.runs[0]?.text || "Artista Sconosciuto";
+                                    const copertinaUrl = `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
+                                    
+                                    creaCardMixtube(id, titolo, artista, copertinaUrl);
+                                    trovati++;
+                                }
+                            });
+
+                            if(trovati === 0) mostramiErroreVuoto();
+                        } else {
+                            mostramiErroreVuoto();
+                        }
                     } else {
-                        // Se l'istanza risponde ma l'array è vuoto, tenta il secondo server per sicurezza
-                        eseguiRicerca(chiave, indiceIstanza + 1);
+                        // Fallback secondario se lo scraping JSON fallisce: Parsing HTML grezzo dei vecchi tag video
+                        parseHtmlFallback(htmlContent);
                     }
                 })
                 .catch(() => {
-                    console.warn(`Server ${istanzeAPI[indiceIstanza]} non raggiungibile. Switch automatico in corso...`);
-                    eseguiRicerca(chiave, indiceIstanza + 1);
+                    resultsContainer.innerHTML = "<p style='color: var(--primary);'>Errore di connessione alla rete musicale. Riprova.</p>";
                 });
+        }
+
+        function parseHtmlFallback(html) {
+            resultsContainer.innerHTML = "";
+            const regexVideo = /\/watch\?v=([a-zA-Z0-9_-]{11})/g;
+            let match;
+            const videoIds = [];
+            
+            while ((match = regexVideo.exec(html)) !== null) {
+                if (!videoIds.includes(match[1])) {
+                    videoIds.push(match[1]);
+                }
+            }
+
+            if (videoIds.length > 0) {
+                videoIds.slice(0, 15).forEach(id => {
+                    creaCardMixtube(id, "Brano Musicale", "YouTube Stream", `https://i.ytimg.com/vi/${id}/hqdefault.jpg`);
+                });
+            } else {
+                mostramiErroreVuoto();
+            }
+        }
+
+        function mostramiErroreVuoto() {
+            resultsContainer.innerHTML = "<p style='color: var(--primary);'>Nessun risultato. Prova a scrivere il nome del cantante abbinato al titolo della canzone.</p>";
         }
 
         function caricaTopTracks() {
             if (modalitaCorrente !== "dashboard") return;
-            eseguiRicerca("trap drill italia 2026");
+            eseguiRicerca("Sfera Ebbasta Shiva Skinny");
             document.getElementById('section-title').innerText = "In Evidenza su Scorpion Pulse";
         }
 
-        // Live Search con filtro antibounce
         searchInput.addEventListener('input', () => {
             clearTimeout(timeoutRicerca);
             const query = searchInput.value.trim();
@@ -490,10 +523,10 @@
 
             timeoutRicerca = setTimeout(() => { 
                 if(modalitaCorrente === "dashboard") eseguiRicerca(query); 
-            }, 400);
+            }, 500);
         });
 
-        // 3. GENERATORE INTERFACCIA CARD
+        // GENERATORE CARD INTERFACCIA
         function creaCardMixtube(id, titolo, artista, copertinaUrl) {
             const card = document.createElement('div');
             card.className = 'track-card';
@@ -507,7 +540,6 @@
                 <button class="like-btn ${isLiked ? 'liked' : ''}" data-id="${id}">${cuoreIcona}</button>
             `;
 
-            // GESTIONE STREAMING AUDIO ROBUSTA
             card.addEventListener('click', (e) => {
                 if (e.target.classList.contains('like-btn')) return;
 
@@ -516,14 +548,17 @@
                 document.getElementById('p-title').innerText = titolo;
                 document.getElementById('p-artist').innerText = artista;
 
+                // RIPRODUZIONE AUDIO MULTI-SERVER CON SWITCH VELOCE
                 const avviaFlussoAudio = (indiceAudio = 0) => {
-                    if (indiceAudio >= istanzeAPI.length) return;
+                    if (indiceAudio >= istanzeAudio.length) {
+                        alert("In questo momento i flussi audio di YouTube sono saturi. Riprova tra pochi istanti.");
+                        return;
+                    }
 
-                    fetch(`${istanzeAPI[indiceAudio]}/streams/${id}`)
+                    fetch(`${istanzeAudio[indiceAudio]}/streams/${id}`)
                         .then(res => res.json())
                         .then(audioData => {
                             if (audioData && audioData.audioStreams && audioData.audioStreams.length > 0) {
-                                // Seleziona il codec M4A o audio ad alto bitrate
                                 const streamAudio = audioData.audioStreams.find(s => s.format === "M4A" || s.bitrate > 120000) || audioData.audioStreams[0];
                                 playerAudio.src = streamAudio.url;
                                 playerAudio.play().catch(() => { playerAudio.controls = true; });
@@ -542,42 +577,4 @@
             const btnLike = card.querySelector('.like-btn');
             btnLike.addEventListener('click', (e) => {
                 e.stopPropagation();
-                gestisciLikeBrano(id, titolo, artista, copertinaUrl, btnLike);
-            });
-
-            resultsContainer.appendChild(card);
-        }
-
-        // 4. STORAGE PREFERITI CLOUD
-        function caricaPreferitiUtente() {
-            if (!window.db || !utenteCorrente) return;
-            db.collection("users").doc(utenteCorrente.uid).collection("favorites")
-                .onSnapshot((snapshot) => {
-                    preferitiIds = [];
-                    snapshot.forEach(doc => preferitiIds.push(String(doc.id)));
-                    if (modalitaCorrente === "preferiti") mostraSchermataPreferiti();
-                });
-        }
-
-        function gestisciLikeBrano(id, titolo, artista, copertinaUrl, bottone) {
-            if (!utenteCorrente || !window.db) return;
-            const docRef = db.collection("users").doc(utenteCorrente.uid).collection("favorites").doc(String(id));
-
-            if (preferitiIds.includes(String(id))) {
-                docRef.delete().then(() => { bottone.classList.remove('liked'); bottone.innerText = "🤍"; });
-            } else {
-                docRef.set({
-                    id: id, title: titolo, artist: artista, coverUrl: copertinaUrl,
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                }).then(() => { bottone.classList.add('liked'); bottone.innerText = "💜"; });
-            }
-        }
-
-        function mostraSchermataPreferiti() {
-            document.getElementById('section-title').innerText = "I tuoi brani Preferiti 💜";
-            resultsContainer.innerHTML = "";
-            if (preferitiIds.length === 0) {
-                resultsContainer.innerHTML = "<p style='color: var(--text-muted);'>Nessun brano salvato nei tuoi preferiti.</p>";
-                return;
-            }
-            db.collection("users").doc(utenteCorrente.uid).collection("favorites")
+                gestisciLikeBrano(id

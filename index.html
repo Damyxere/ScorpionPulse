@@ -356,7 +356,7 @@
 
     <div class="sidebar">
         <div>
-            <div class="brand"> Scorpion<span>Pulse</span></div>
+            <div class="brand">🦂 Scorpion<span>Pulse</span></div>
             <div class="menu-group">
                 <button class="menu-btn active" id="menu-dashboard">🎵 Dashboard</button>
                 <button class="menu-btn" id="menu-favorites">💜 Preferiti</button>
@@ -403,11 +403,12 @@
         let modalitaCorrente = "dashboard";
         let timeoutRicerca = null;
 
-        // Lista di fallback dei server audio Piped
-        const istanzeAudio = [
-            "https://piped-api.garudalinux.org",
-            "https://api.piped.yt",
-            "https://pipedapi.oxit.co"
+        // INVIDIOUS NETWORK - I nodi API più veloci e stabili usati dai bot musicali
+        const istanzeInvidious = [
+            "https://invidious.flokinet.to",
+            "https://iv.melmac.space",
+            "https://invidious.perennialte.ch",
+            "https://vid.puffyan.us"
         ];
 
         const searchInput = document.getElementById('search-input');
@@ -430,88 +431,49 @@
         document.getElementById('btn-logout').addEventListener('click', logoutAzione);
         document.getElementById('m-btn-logout').addEventListener('click', logoutAzione);
 
-        // NUOVO MOTORE DI RICERCA DIRETTO (BYPASSA I BLOCCHI PIPED)
-        function eseguiRicerca(chiave) {
-            document.getElementById('section-title').innerText = "Risultati per: " + chiave;
-            resultsContainer.innerHTML = "<p style='color: var(--text-muted);'>Interrogazione database YouTube...</p>";
+        // ENGINE DI RICERCA INVIDIOUS CON AUTOSWITCH IN CASO DI BLOCCO
+        function eseguiRicerca(chiave, indexNode = 0) {
+            if (indexNode >= istanzeInvidious.length) {
+                resultsContainer.innerHTML = "<p style='color: var(--primary);'>I nodi di sblocco sono momentaneamente sovraccarichi. Riprova tra un attimo.</p>";
+                return;
+            }
 
-            // Utilizziamo un proxy CORS ed effettuiamo lo scraping pulito della ricerca YouTube nativa
-            const urlScraping = `https://api.allorigins.win/get?url=${encodeURIComponent('https://www.youtube.com/results?search_query=' + encodeURIComponent(chiave) + '&sp=EgIQAQ%253D%253D')}`;
+            if (indexNode === 0) {
+                document.getElementById('section-title').innerText = "Risultati per: " + chiave;
+                resultsContainer.innerHTML = "<p style='color: var(--text-muted);'>Connessione al server di sblocco in corso...</p>";
+            }
 
-            fetch(urlScraping)
+            const urlInvidious = `${istanzeInvidious[indexNode]}/api/v1/search?q=${encodeURIComponent(chiave)}&type=video`;
+
+            fetch(urlInvidious)
                 .then(res => {
-                    if (!res.ok) throw new Error();
+                    if(!res.ok) throw new Error("Nodo offline");
                     return res.json();
                 })
                 .then(data => {
-                    resultsContainer.innerHTML = "";
-                    const htmlContent = data.contents;
-                    
-                    // Regex avanzata per estrarre i dati dei video dall'oggettoytInitialData di YouTube
-                    const regexData = /ytInitialData\s*=\s*({.+?});/;
-                    const match = htmlContent.match(regexData);
-
-                    if (match && match[1]) {
-                        const jsonData = JSON.parse(match[1]);
-                        const contents = jsonData.contents?.twoColumnSearchResultsRenderer?.primaryContents?.sectionListRenderer?.contents[0]?.itemSectionRenderer?.contents;
-                        
-                        if (contents && contents.length > 0) {
-                            let trovati = 0;
-                            contents.forEach(item => {
-                                const videoRenderer = item.videoRenderer;
-                                if (videoRenderer && videoRenderer.videoId) {
-                                    const id = videoRenderer.videoId;
-                                    const titolo = videoRenderer.title?.runs[0]?.text || "Traccia Senza Titolo";
-                                    const artista = videoRenderer.ownerText?.runs[0]?.text || "Artista Sconosciuto";
-                                    const copertinaUrl = `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
-                                    
-                                    creaCardMixtube(id, titolo, artista, copertinaUrl);
-                                    trovati++;
-                                }
-                            });
-
-                            if(trovati === 0) mostramiErroreVuoto();
-                        } else {
-                            mostramiErroreVuoto();
-                        }
+                    if (data && data.length > 0) {
+                        resultsContainer.innerHTML = "";
+                        data.slice(0, 20).forEach(video => {
+                            const id = video.videoId;
+                            const titolo = video.title;
+                            const artista = video.author;
+                            const copertinaUrl = video.videoThumbnails?.find(t => t.quality === "high")?.url || `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
+                            
+                            creaCardMixtube(id, titolo, artista, copertinaUrl);
+                        });
                     } else {
-                        // Fallback secondario se lo scraping JSON fallisce: Parsing HTML grezzo dei vecchi tag video
-                        parseHtmlFallback(htmlContent);
+                        eseguiRicerca(chiave, indexNode + 1);
                     }
                 })
                 .catch(() => {
-                    resultsContainer.innerHTML = "<p style='color: var(--primary);'>Errore di connessione alla rete musicale. Riprova.</p>";
+                    console.log(`Nodo ${istanzeInvidious[indexNode]} fallito. Tento il successivo...`);
+                    eseguiRicerca(chiave, indexNode + 1);
                 });
-        }
-
-        function parseHtmlFallback(html) {
-            resultsContainer.innerHTML = "";
-            const regexVideo = /\/watch\?v=([a-zA-Z0-9_-]{11})/g;
-            let match;
-            const videoIds = [];
-            
-            while ((match = regexVideo.exec(html)) !== null) {
-                if (!videoIds.includes(match[1])) {
-                    videoIds.push(match[1]);
-                }
-            }
-
-            if (videoIds.length > 0) {
-                videoIds.slice(0, 15).forEach(id => {
-                    creaCardMixtube(id, "Brano Musicale", "YouTube Stream", `https://i.ytimg.com/vi/${id}/hqdefault.jpg`);
-                });
-            } else {
-                mostramiErroreVuoto();
-            }
-        }
-
-        function mostramiErroreVuoto() {
-            resultsContainer.innerHTML = "<p style='color: var(--primary);'>Nessun risultato. Prova a scrivere il nome del cantante abbinato al titolo della canzone.</p>";
         }
 
         function caricaTopTracks() {
             if (modalitaCorrente !== "dashboard") return;
-            eseguiRicerca("Sfera Ebbasta Shiva Skinny");
+            eseguiRicerca("Skinny Shiva Sfera");
             document.getElementById('section-title').innerText = "In Evidenza su Scorpion Pulse";
         }
 
@@ -523,10 +485,10 @@
 
             timeoutRicerca = setTimeout(() => { 
                 if(modalitaCorrente === "dashboard") eseguiRicerca(query); 
-            }, 500);
+            }, 600);
         });
 
-        // GENERATORE CARD INTERFACCIA
+        // GENERATORE DI CARD CON DECRIPTAZIONE FLUSSO AUDIO DIRETTO
         function creaCardMixtube(id, titolo, artista, copertinaUrl) {
             const card = document.createElement('div');
             card.className = 'track-card';
@@ -548,33 +510,71 @@
                 document.getElementById('p-title').innerText = titolo;
                 document.getElementById('p-artist').innerText = artista;
 
-                // RIPRODUZIONE AUDIO MULTI-SERVER CON SWITCH VELOCE
-                const avviaFlussoAudio = (indiceAudio = 0) => {
-                    if (indiceAudio >= istanzeAudio.length) {
-                        alert("In questo momento i flussi audio di YouTube sono saturi. Riprova tra pochi istanti.");
+                // RIPRODUZIONE AUDIO DIRETTA SENZA PROXY INTERMEDIARI INTERROTTI
+                const riproduciAudioDaInvidious = (nodeIdx = 0) => {
+                    if (nodeIdx >= istanzeInvidious.length) {
+                        // Soluzione estrema di riserva se tutti i nodi API falliscono lo stream audio
+                        playerAudio.src = `https://www.youtube.com/embed/${id}?autoplay=1&迫=1`;
                         return;
                     }
 
-                    fetch(`${istanzeAudio[indiceAudio]}/streams/${id}`)
-                        .then(res => res.json())
-                        .then(audioData => {
-                            if (audioData && audioData.audioStreams && audioData.audioStreams.length > 0) {
-                                const streamAudio = audioData.audioStreams.find(s => s.format === "M4A" || s.bitrate > 120000) || audioData.audioStreams[0];
-                                playerAudio.src = streamAudio.url;
-                                playerAudio.play().catch(() => { playerAudio.controls = true; });
-                            } else {
-                                avviaFlussoAudio(indiceAudio + 1);
-                            }
-                        })
+                    // Invidious espone direttamente l'URL di streaming pulito bypassando i blocchi firma di YouTube
+                    const streamUrl = `${istanzeInvidious[nodeIdx]}/latest_version?id=${id}&itag=140`; // itag 140 = Audio AAC M4A puro ad alta qualità
+                    
+                    playerAudio.src = streamUrl;
+                    playerAudio.play()
                         .catch(() => {
-                            avviaFlussoAudio(indiceAudio + 1);
+                            // Se la riproduzione diretta fallisce (es. blocco del server), prova il nodo successivo
+                            riproduciAudioDaInvidious(nodeIdx + 1);
                         });
                 };
 
-                avviaFlussoAudio(0);
+                riproduciAudioDaInvidious(0);
             });
 
             const btnLike = card.querySelector('.like-btn');
             btnLike.addEventListener('click', (e) => {
                 e.stopPropagation();
-                gestisciLikeBrano(id
+                gestisciLikeBrano(id, titolo, artista, copertinaUrl, btnLike);
+            });
+
+            resultsContainer.appendChild(card);
+        }
+
+        function caricaPreferitiUtente() {
+            if (!window.db || !utenteCorrente) return;
+            db.collection("users").doc(utenteCorrente.uid).collection("favorites")
+                .onSnapshot((snapshot) => {
+                    preferitiIds = [];
+                    snapshot.forEach(doc => preferitiIds.push(String(doc.id)));
+                    if (modalitaCorrente === "preferiti") mostraSchermataPreferiti();
+                });
+        }
+
+        function gestisciLikeBrano(id, titolo, artista, copertinaUrl, bottone) {
+            if (!utenteCorrente || !window.db) return;
+            const docRef = db.collection("users").doc(utenteCorrente.uid).collection("favorites").doc(String(id));
+
+            if (preferitiIds.includes(String(id))) {
+                docRef.delete().then(() => { bottone.classList.remove('liked'); bottone.innerText = "🤍"; });
+            } else {
+                docRef.set({
+                    id: id, title: titolo, artist: artista, coverUrl: copertinaUrl,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                }).then(() => { bottone.classList.add('liked'); bottone.innerText = "💜"; });
+            }
+        }
+
+        function mostraSchermataPreferiti() {
+            document.getElementById('section-title').innerText = "I tuoi brani Preferiti 💜";
+            resultsContainer.innerHTML = "";
+            if (preferitiIds.length === 0) {
+                resultsContainer.innerHTML = "<p style='color: var(--text-muted);'>Nessun brano salvato nei tuoi preferiti.</p>";
+                return;
+            }
+            db.collection("users").doc(utenteCorrente.uid).collection("favorites").orderBy("timestamp", "desc").get()
+                .then(snapshot => {
+                    if (modalitaCorrente !== "preferiti") return;
+                    resultsContainer.innerHTML = "";
+                    snapshot.forEach(doc => {
+                        const data = doc.data();

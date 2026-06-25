@@ -183,6 +183,11 @@
             position: relative;
         }
 
+        .track-card:hover {
+            background: var(--bg-card-hover);
+            transform: translateY(-2px);
+        }
+
         .track-cover {
             width: 100%;
             aspect-ratio: 1;
@@ -200,7 +205,7 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            padding-right: 20px;
+            padding-right: 24px;
         }
 
         .track-artist {
@@ -221,6 +226,7 @@
             font-size: 1.1rem;
             cursor: pointer;
             z-index: 10;
+            padding: 2px;
         }
 
         .like-btn.liked {
@@ -283,6 +289,9 @@
         .player-current-artist {
             font-size: 0.75rem;
             color: var(--text-muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .player-controls {
@@ -321,6 +330,7 @@
             flex-direction: column;
             align-items: center;
             gap: 4px;
+            cursor: pointer;
         }
 
         .mobile-nav-btn.active {
@@ -333,14 +343,14 @@
             .mobile-nav { display: flex; }
             .main-content { padding: 16px 16px 180px 16px; }
             .results-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; }
-            .player-bar { bottom: 60px; } /* Alzato sopra la barra di navigazione */
+            .player-bar { bottom: 60px; }
         }
     </style>
 
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-    <script src="firebase-loader.js?v=4"></script>
+    <script src="firebase-loader.js?v=5"></script>
 </head>
 <body>
 
@@ -393,11 +403,28 @@
         let modalitaCorrente = "dashboard";
         let timeoutRicerca = null;
 
+        // Lista ordinata delle istanze API più stabili del network globale
+        const istanzeAPI = [
+            "https://piped-api.garudalinux.org",
+            "https://api.piped.yt",
+            "https://pipedapi.oxit.co"
+        ];
+
         const searchInput = document.getElementById('search-input');
         const resultsContainer = document.getElementById('results-container');
         const playerAudio = document.getElementById('audio-player');
 
-        // Firebase Auth Init
+        // SBLOCCO AUDIO AUTOMATICO MOBILE
+        document.addEventListener('DOMContentLoaded', () => {
+            if (localStorage.getItem('audio_unlocked') === 'true') {
+                playerAudio.play().catch(() => {
+                    console.log("In attesa di interazione per l'audio.");
+                });
+                localStorage.removeItem('audio_unlocked');
+            }
+        });
+
+        // 1. GESTIONE AUTENTICAZIONE
         if (typeof auth !== 'undefined') {
             auth.onAuthStateChanged((user) => {
                 if (user) {
@@ -414,46 +441,47 @@
         document.getElementById('btn-logout').addEventListener('click', logoutAzione);
         document.getElementById('m-btn-logout').addEventListener('click', logoutAzione);
 
-        // MOTORE DI RICERCA TOTALMENTE INDIPENDENTE E DISTRUTTIVO (Soluzione Definitiva Cloud)
-        function eseguiRicerca(chiave) {
-            document.getElementById('section-title').innerText = "Risultati per: " + chiave;
-            resultsContainer.innerHTML = "<p style='color: var(--text-muted);'>Interrogazione server musicali dedicati...</p>";
+        // 2. SISTEMA DI INTERROGAZIONE AD ALTA DISPONIBILITÀ (ROTATION ENGINE)
+        function eseguiRicerca(chiave, indiceIstanza = 0) {
+            if (indiceIstanza >= istanzeAPI.length) {
+                resultsContainer.innerHTML = "<p style='color: var(--primary);'>Tutti i server musicali sono occupati. Riprova tra pochi secondi.</p>";
+                return;
+            }
 
-            // Usiamo un worker mirror centralizzato ultra-veloce che non va mai in blocco CORS o 429
-            const queryUrl = `https://pipedapi.kavin.rocks/search?q=${encodeURIComponent(chiave)}&filter=videos`;
+            if (indiceIstanza === 0) {
+                document.getElementById('section-title').innerText = "Risultati per: " + chiave;
+                resultsContainer.innerHTML = "<p style='color: var(--text-muted);'>Scansione database globale in corso...</p>";
+            }
 
-            fetch(queryUrl)
+            const urlCompleto = `${istanzeAPI[indiceIstanza]}/search?q=${encodeURIComponent(chiave)}&filter=videos`;
+
+            fetch(urlCompleto)
                 .then(res => res.json())
                 .then(data => {
                     resultsContainer.innerHTML = "";
                     if (data && data.streams && data.streams.length > 0) {
-                        data.streams.slice(0, 20).forEach(track => {
-                            creaCardMixtube(track.url.split("=")[1], track.title, track.uploaderName, track.thumbnail);
+                        data.streams.slice(0, 24).forEach(track => {
+                            const videoId = track.url.split("=")[1] || track.url.split("/").pop();
+                            creaCardMixtube(videoId, track.title, track.uploaderName, track.thumbnail);
                         });
                     } else {
-                        resultsContainer.innerHTML = "<p style='color: var(--primary);'>Nessun brano trovato. Riprova con altre parole chiave.</p>";
+                        // Se l'istanza risponde ma l'array è vuoto, tenta il secondo server per sicurezza
+                        eseguiRicerca(chiave, indiceIstanza + 1);
                     }
                 })
                 .catch(() => {
-                    resultsContainer.innerHTML = "<p style='color: var(--primary);'>Errore di connessione. Cambio istanza in corso...</p>";
-                    // Fallback immediato su istanza secondaria se la prima fallisce
-                    fetch(`https://pipedapi.tokhmi.xyz/search?q=${encodeURIComponent(chiave)}&filter=videos`)
-                        .then(r => r.json())
-                        .then(d => {
-                            resultsContainer.innerHTML = "";
-                            if(d.streams) {
-                                d.streams.slice(0,20).forEach(t => creaCardMixtube(t.url.split("=")[1], t.title, t.uploaderName, t.thumbnail));
-                            }
-                        });
+                    console.warn(`Server ${istanzeAPI[indiceIstanza]} non raggiungibile. Switch automatico in corso...`);
+                    eseguiRicerca(chiave, indiceIstanza + 1);
                 });
         }
 
         function caricaTopTracks() {
             if (modalitaCorrente !== "dashboard") return;
             eseguiRicerca("trap drill italia 2026");
-            document.getElementById('section-title').innerText = "Tendenze Scorpion Pulse";
+            document.getElementById('section-title').innerText = "In Evidenza su Scorpion Pulse";
         }
 
+        // Live Search con filtro antibounce
         searchInput.addEventListener('input', () => {
             clearTimeout(timeoutRicerca);
             const query = searchInput.value.trim();
@@ -465,6 +493,7 @@
             }, 400);
         });
 
+        // 3. GENERATORE INTERFACCIA CARD
         function creaCardMixtube(id, titolo, artista, copertinaUrl) {
             const card = document.createElement('div');
             card.className = 'track-card';
@@ -478,6 +507,7 @@
                 <button class="like-btn ${isLiked ? 'liked' : ''}" data-id="${id}">${cuoreIcona}</button>
             `;
 
+            // GESTIONE STREAMING AUDIO ROBUSTA
             card.addEventListener('click', (e) => {
                 if (e.target.classList.contains('like-btn')) return;
 
@@ -486,27 +516,27 @@
                 document.getElementById('p-title').innerText = titolo;
                 document.getElementById('p-artist').innerText = artista;
 
-                // Estrazione diretta del flusso audio puro M4A/AAC a 140kbps senza pubblicità video
-                fetch(`https://pipedapi.kavin.rocks/streams/${id}`)
-                    .then(res => res.json())
-                    .then(audioData => {
-                        if (audioData && audioData.audioStreams) {
-                            // Trova la sorgente audio più fluida ed economica per il telefono
-                            const streamAudio = audioData.audioStreams.find(s => s.bitrate === 140000 || s.format === "M4A") || audioData.audioStreams[0];
-                            playerAudio.src = streamAudio.url;
-                            playerAudio.play().catch(() => { playerAudio.controls = true; });
-                        }
-                    })
-                    .catch(() => {
-                        // Fallback su istanza di streaming di riserva
-                        fetch(`https://pipedapi.tokhmi.xyz/streams/${id}`)
-                            .then(r => r.json())
-                            .then(ad => {
-                                const s = ad.audioStreams.find(s => s.bitrate === 140000 || s.format === "M4A") || ad.audioStreams[0];
-                                playerAudio.src = s.url;
-                                playerAudio.play();
-                            });
-                    });
+                const avviaFlussoAudio = (indiceAudio = 0) => {
+                    if (indiceAudio >= istanzeAPI.length) return;
+
+                    fetch(`${istanzeAPI[indiceAudio]}/streams/${id}`)
+                        .then(res => res.json())
+                        .then(audioData => {
+                            if (audioData && audioData.audioStreams && audioData.audioStreams.length > 0) {
+                                // Seleziona il codec M4A o audio ad alto bitrate
+                                const streamAudio = audioData.audioStreams.find(s => s.format === "M4A" || s.bitrate > 120000) || audioData.audioStreams[0];
+                                playerAudio.src = streamAudio.url;
+                                playerAudio.play().catch(() => { playerAudio.controls = true; });
+                            } else {
+                                avviaFlussoAudio(indiceAudio + 1);
+                            }
+                        })
+                        .catch(() => {
+                            avviaFlussoAudio(indiceAudio + 1);
+                        });
+                };
+
+                avviaFlussoAudio(0);
             });
 
             const btnLike = card.querySelector('.like-btn');
@@ -518,7 +548,7 @@
             resultsContainer.appendChild(card);
         }
 
-        // CLOUD PREFERITI FIRESTORE
+        // 4. STORAGE PREFERITI CLOUD
         function caricaPreferitiUtente() {
             if (!window.db || !utenteCorrente) return;
             db.collection("users").doc(utenteCorrente.uid).collection("favorites")
@@ -547,21 +577,7 @@
             document.getElementById('section-title').innerText = "I tuoi brani Preferiti 💜";
             resultsContainer.innerHTML = "";
             if (preferitiIds.length === 0) {
-                resultsContainer.innerHTML = "<p style='color: var(--text-muted);'>Nessun brano salvato.</p>";
+                resultsContainer.innerHTML = "<p style='color: var(--text-muted);'>Nessun brano salvato nei tuoi preferiti.</p>";
                 return;
             }
-            db.collection("users").doc(utenteCorrente.uid).collection("favorites").orderBy("timestamp", "desc").get()
-                .then(snapshot => {
-                    if (modalitaCorrente !== "preferiti") return;
-                    resultsContainer.innerHTML = "";
-                    snapshot.forEach(doc => {
-                        const data = doc.data();
-                        creaCardMixtube(data.id, data.title, data.artist, data.coverUrl);
-                    });
-                });
-        }
-
-        const attivaDashboard = () => {
-            modalitaCorrente = "dashboard";
-            document.querySelectorAll('#menu-dashboard, #m-menu-dashboard').forEach(b => b.classList.add('active'));
-    
+            db.collection("users").doc(utenteCorrente.uid).collection("favorites")

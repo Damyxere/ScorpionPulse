@@ -2,98 +2,352 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Scorpion Pulse - Registrazione</title>
     <style>
+        :root {
+            --bg-main: #050507;
+            --bg-card: #0c0c0e;
+            --primary: #ff2a2a;
+            --primary-glow: rgba(255, 42, 42, 0.25);
+            --text-main: #f4f4f5;
+            --text-muted: #71717a;
+            --border: #1f1f23;
+            --error: #ef4444;
+            --success: #10b981;
+        }
+
+        * { 
+            box-sizing: border-box; 
+            margin: 0; 
+            padding: 0; 
+            -webkit-tap-highlight-color: transparent; 
+        }
+
         body {
-            font-family: 'Segoe UI', system-ui, sans-serif;
-            background-color: #09090b;
-            color: #ffffff;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-main);
             display: flex;
-            justify-content: center;
             align-items: center;
-            height: 100vh;
-            margin: 0;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+            letter-spacing: -0.02em;
         }
+
         .auth-container {
-            background: #141417;
-            padding: 32px;
-            border-radius: 12px;
-            border: 1px solid #27272a;
             width: 100%;
-            max-width: 400px;
+            max-width: 420px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 40px 32px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
         }
-        h2 { margin-bottom: 24px; font-weight: 700; text-align: center; }
-        h2 span { color: #ff2a2a; }
-        .input-group { margin-bottom: 20px; }
-        label { display: block; margin-bottom: 8px; color: #a1a1aa; font-size: 0.9rem; }
-        input {
-            width: 100%;
-            padding: 12px;
-            background: #09090b;
-            border: 1px solid #27272a;
-            border-radius: 6px;
-            color: white;
-            font-size: 1rem;
+
+        .brand { 
+            font-size: 1.8rem; 
+            font-weight: 900; 
+            text-align: center;
+            letter-spacing: 0.5px; 
+            text-transform: uppercase;
+            text-shadow: 0 0 20px var(--primary-glow);
+            margin-bottom: 8px;
         }
-        input:focus { border-color: #ff2a2a; outline: none; }
-        button {
+        .brand span { color: var(--primary); }
+
+        .subtitle {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            text-align: center;
+            margin-bottom: 32px;
+            font-weight: 500;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-main);
+        }
+
+        .form-input { 
+            width: 100%; 
+            padding: 14px 18px; 
+            background: #121214; 
+            border: 1px solid var(--border); 
+            border-radius: 12px; 
+            color: white; 
+            font-size: 15px; 
+            transition: all 0.2s ease;
+        }
+        .form-input:focus { 
+            border-color: var(--primary); 
+            outline: none; 
+            box-shadow: 0 0 0 3px var(--primary-glow);
+            background: #161619;
+        }
+
+        /* Feedback di validazione sotto i campi */
+        .feedback {
+            font-size: 0.75rem;
+            margin-top: 6px;
+            font-weight: 500;
+            display: none;
+        }
+        .feedback.err { color: var(--error); display: block; }
+        .feedback.valido { color: var(--success); display: block; }
+
+        .btn-auth {
             width: 100%;
-            padding: 12px;
-            background: #ff2a2a;
+            background: var(--primary);
             color: white;
             border: none;
-            border-radius: 6px;
-            font-weight: 600;
-            cursor: pointer;
+            padding: 14px;
+            border-radius: 12px;
             font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
             margin-top: 10px;
+            box-shadow: 0 4px 15px var(--primary-glow);
         }
-        .error-msg { color: #ff2a2a; font-size: 0.85rem; margin-top: 10px; text-align: center; display: none; }
-        p { text-align: center; color: #a1a1aa; margin-top: 20px; font-size: 0.9rem; }
-        a { color: #ff2a2a; text-decoration: none; font-weight: 600; }
+        .btn-auth:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px var(--primary-glow);
+        }
+        .btn-auth:disabled {
+            background: #27272a;
+            color: var(--text-muted);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .global-error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid var(--error);
+            color: var(--error);
+            padding: 12px;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .switch-auth {
+            text-align: center;
+            margin-top: 24px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+        .switch-auth a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 700;
+            margin-left: 4px;
+        }
+        .switch-auth a:hover {
+            text-decoration: underline;
+        }
     </style>
+    <!-- Carica i moduli core SDK di Firebase in compat mode -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-    <script src="firebase-config.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <!-- Configurazione centralizzata corretta -->
+    <script src="firebase-loader.js"></script>
 </head>
 <body>
 
     <div class="auth-container">
-        <h2>🦂 Scorpion<span>Pulse</span></h2>
-        <form id="register-form">
-            <div class="input-group">
-                <label for="email">Email</label>
-                <input type="email" id="email" required autocomplete="email">
+        <div class="brand">🦂 Scorpion<span>Pulse</span></div>
+        <div class="subtitle">Crea un account per salvare i tuoi preferiti</div>
+
+        <div class="global-error" id="error-generale"></div>
+
+        <form id="register-form" onsubmit="effettuaRegistrazione(event)">
+            <!-- Nome Utente / Nickname -->
+            <div class="form-group">
+                <label for="username">Nome Utente</label>
+                <input type="text" id="username" class="form-input" placeholder="Scegli un nickname" required autocomplete="username">
+                <div class="feedback" id="feedback-username"></div>
             </div>
-            <div class="input-group">
+
+            <!-- Email -->
+            <div class="form-group">
+                <label for="email">Indirizzo Email</label>
+                <input type="email" id="email" class="form-input" placeholder="esempio@email.com" required autocomplete="email">
+            </div>
+
+            <!-- Password -->
+            <div class="form-group">
                 <label for="password">Password</label>
-                <input type="password" id="password" required autocomplete="new-password">
+                <input type="password" id="password" class="form-input" placeholder="Minimo 6 caratteri" required autocomplete="new-password">
+                <div class="feedback" id="feedback-password"></div>
             </div>
-            <button type="submit">Crea Account</button>
-            <div class="error-msg" id="error-message"></div>
+
+            <!-- Conferma Password -->
+            <div class="form-group">
+                <label for="confirm-password">Conferma Password</label>
+                <input type="password" id="confirm-password" class="form-input" placeholder="Ripeti la password" required autocomplete="new-password">
+                <div class="feedback" id="feedback-conferma"></div>
+            </div>
+
+            <button type="submit" class="btn-auth" id="btn-submit">Registrati</button>
         </form>
-        <p>Hai già un account? <a href="login.html">Accedi qui</a></p>
+
+        <div class="switch-auth">
+            Hai già un account?<a href="login.html">Accedi qui</a>
+        </div>
     </div>
 
     <script>
-        document.getElementById('register-form').addEventListener('submit', (e) => {
-            e.preventDefault();
-            const email = document.getElementById('email').value.trim();
-            const password = document.getElementById('password').value;
-            const errorDiv = document.getElementById('error-message');
-            
-            errorDiv.style.display = "none";
+        const usernameInput = document.getElementById('username');
+        const passwordInput = document.getElementById('password');
+        const confirmPasswordInput = document.getElementById('confirm-password');
+        
+        const feedbackUsername = document.getElementById('feedback-username');
+        const feedbackPassword = document.getElementById('feedback-password');
+        const feedbackConferma = document.getElementById('feedback-conferma');
+        const errorGenerale = document.getElementById('error-generale');
 
+        // Controllo Nome Utente in tempo reale
+        usernameInput.addEventListener('input', () => {
+            const val = usernameInput.value.trim();
+            if(val.length < 3) {
+                feedbackUsername.innerText = "Il nome deve avere almeno 3 caratteri.";
+                feedbackUsername.className = "feedback err";
+            } else {
+                feedbackUsername.innerText = "Nome valido.";
+                feedbackUsername.className = "feedback valido";
+            }
+        });
+
+        // Controllo Password in tempo reale
+        passwordInput.addEventListener('input', () => {
+            const val = passwordInput.value;
+            if(val.length < 6) {
+                feedbackPassword.innerText = "La password deve contenere almeno 6 caratteri.";
+                feedbackPassword.className = "feedback err";
+            } else {
+                feedbackPassword.innerText = "Password sicura.";
+                feedbackPassword.className = "feedback valido";
+            }
+            verificaUguaglianzaPassword();
+        });
+
+        // Controllo Uguaglianza Conferma Password
+        confirmPasswordInput.addEventListener('input', verificaUguaglianzaPassword);
+
+        function verificaUguaglianzaPassword() {
+            const p1 = passwordInput.value;
+            const p2 = confirmPasswordInput.value;
+
+            if(!p2) {
+                feedbackConferma.style.display = "none";
+                return;
+            }
+
+            if(p1 !== p2) {
+                feedbackConferma.innerText = "Le password non corrispondono.";
+                feedbackConferma.className = "feedback err";
+                return false;
+            } else {
+                feedbackConferma.innerText = "Le password corrispondono.";
+                feedbackConferma.className = "feedback valido";
+                return true;
+            }
+        }
+
+        // Gestione Invio Dati e Salvataggio su Firebase
+        function effettuaRegistrazione(e) {
+            e.preventDefault();
+            errorGenerale.style.display = "none";
+
+            const username = usernameInput.value.trim();
+            const email = document.getElementById('email').value.trim();
+            const password = passwordInput.value;
+
+            // Blocca subito se i controlli base falliscono
+            if(username.length < 3) {
+                errorGenerale.innerText = "Correggi il nome utente prima di continuare.";
+                errorGenerale.style.display = "block";
+                return;
+            }
+
+            if(password.length < 6) {
+                errorGenerale.innerText = "La password è troppo corta.";
+                errorGenerale.style.display = "block";
+                return;
+            }
+
+            if(!verificaUguaglianzaPassword()) {
+                errorGenerale.innerText = "Le password fornite non coincidono.";
+                errorGenerale.style.display = "block";
+                return;
+            }
+
+            const btnSubmit = document.getElementById('btn-submit');
+            btnSubmit.disabled = true;
+            btnSubmit.innerText = "Creazione account...";
+
+            if (!window.auth || !window.db) {
+                errorGenerale.innerText = "Errore critico: Firebase non è configurato correttamente.";
+                errorGenerale.style.display = "block";
+                btnSubmit.disabled = false;
+                btnSubmit.innerText = "Registrati";
+                return;
+            }
+
+            // 1. Crea l'utente su Firebase Authentication
             window.auth.createUserWithEmailAndPassword(email, password)
+                .then((userCredential) => {
+                    const utente = userCredential.user;
+                    
+                    // 2. Salva il Nome Utente personalizzato nel database Firestore legato all'UID utente
+                    return window.db.collection("users").doc(utente.uid).set({
+                        username: username,
+                        email: email,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                })
                 .then(() => {
+                    // Successo totale: reindirizza all'index del player
                     window.location.href = "index.html";
                 })
                 .catch((error) => {
-                    errorDiv.innerText = error.message;
-                    errorDiv.style.display = "block";
+                    console.error(error);
+                    btnSubmit.disabled = false;
+                    btnSubmit.innerText = "Registrati";
+                    errorGenerale.style.display = "block";
+
+                    // Traduzione errori standard di Firebase per l'utente
+                    switch (error.code) {
+                        case 'auth/email-already-in-use':
+                            errorGenerale.innerText = "Questo indirizzo email è già associato a un account.";
+                            break;
+                        case 'auth/invalid-email':
+                            errorGenerale.innerText = "L'indirizzo email inserito non è valido.";
+                            break;
+                        case 'auth/weak-password':
+                            errorGenerale.innerText = "La password è troppo debole.";
+                            break;
+                        default:
+                            errorGenerale.innerText = "Errore durante la registrazione: " + error.message;
+                    }
                 });
-        });
+        }
     </script>
 </body>
 </html>

@@ -19,3 +19,4 @@ try {
 } catch (error) {
     console.error("Errore critico durante l'inizializzazione di Firebase:", error);
 }
+

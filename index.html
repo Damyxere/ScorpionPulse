@@ -6,111 +6,255 @@
     <title>Scorpion Pulse - Player</title>
     <style>
         :root {
-            --bg-main: #09090b;
-            --bg-sidebar: #020203;
-            --bg-card: #141417;
-            --bg-card-hover: #1e1e24;
+            --bg-main: #050507;
+            --bg-sidebar: #09090b;
+            --bg-card: #121214;
+            --bg-card-hover: #1a1a1e;
             --primary: #ff2a2a;
-            --text-main: #ffffff;
-            --text-muted: #a1a1aa;
-            --border: #27272a;
-            --player-bg: #0f0f11;
+            --primary-glow: rgba(255, 42, 42, 0.25);
+            --text-main: #f4f4f5;
+            --text-muted: #71717a;
+            --border: #1f1f23;
+            --player-bg: #0c0c0e;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        * { 
+            box-sizing: border-box; 
+            margin: 0; 
+            padding: 0; 
+            -webkit-tap-highlight-color: transparent; 
+        }
+
+        /* Custom scrollbar super sottile */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg-main); }
+        ::-webkit-scrollbar-thumb { background: #27272a; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--primary); }
 
         body {
-            font-family: 'Segoe UI', system-ui, sans-serif;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
             background-color: var(--bg-main);
             color: var(--text-main);
             display: flex;
             height: 100vh;
             overflow: hidden;
+            letter-spacing: -0.02em;
         }
 
         .sidebar {
-            width: 240px;
+            width: 260px;
             background: var(--bg-sidebar);
             border-right: 1px solid var(--border);
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            padding: 24px;
+            padding: 32px 24px;
             flex-shrink: 0;
         }
 
-        .brand { font-size: 1.4rem; font-weight: 800; letter-spacing: 1px; }
+        .brand { 
+            font-size: 1.5rem; 
+            font-weight: 900; 
+            letter-spacing: 0.5px; 
+            text-transform: uppercase;
+            text-shadow: 0 0 20px var(--primary-glow);
+        }
         .brand span { color: var(--primary); }
 
-        .menu-group { display: flex; flex-direction: column; gap: 8px; margin-top: 32px; }
+        .menu-group { display: flex; flex-direction: column; gap: 6px; margin-top: 40px; }
         .menu-btn {
             background: transparent;
             color: var(--text-muted);
             border: none;
-            padding: 12px 16px;
-            border-radius: 8px;
+            padding: 14px 18px;
+            border-radius: 10px;
             text-align: left;
             font-size: 0.95rem;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             font-weight: 600;
             width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
-        .menu-btn:hover, .menu-btn.active { background: #18181b; color: var(--text-main); }
-        .menu-btn.active { border-left: 3px solid var(--primary); border-radius: 0 8px 8px 0; }
+        .menu-btn:hover {
+            color: var(--text-main);
+            background: #141417;
+        }
+        .menu-btn.active { 
+            background: var(--primary); 
+            color: #ffffff;
+            box-shadow: 0 4px 15px var(--primary-glow);
+        }
 
-        .user-panel { background: #141417; padding: 16px; border-radius: 12px; border: 1px solid var(--border); }
-        .user-name { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .logout-btn { background: #27272a; color: var(--text-main); border: none; padding: 8px; border-radius: 6px; cursor: pointer; font-weight: 600; width: 100%; }
-        .logout-btn:hover { background: var(--primary); }
+        .user-panel { 
+            background: #141417; 
+            padding: 18px; 
+            border-radius: 14px; 
+            border: 1px solid var(--border); 
+        }
+        .user-name { 
+            font-size: 0.85rem; 
+            color: var(--text-muted); 
+            margin-bottom: 14px; 
+            text-align: center; 
+            overflow: hidden; 
+            text-overflow: ellipsis; 
+            white-space: nowrap;
+            font-weight: 500;
+        }
+        .logout-btn { 
+            background: #27272a; 
+            color: var(--text-main); 
+            border: none; 
+            padding: 10px; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-weight: 700; 
+            width: 100%; 
+            transition: background 0.2s;
+        }
+        .logout-btn:hover { background: var(--primary); color: white; }
 
-        .main-content { flex: 1; display: flex; flex-direction: column; padding: 32px 32px 160px 32px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
-        .search-container { margin-bottom: 32px; max-width: 600px; width: 100%; }
-        .search-bar { width: 100%; padding: 14px 24px; background: #141417; border: 1px solid var(--border); border-radius: 50px; color: white; font-size: 16px; }
-        .search-bar:focus { border-color: var(--primary); outline: none; }
+        .main-content { 
+            flex: 1; 
+            display: flex; 
+            flex-direction: column; 
+            padding: 40px 40px 160px 40px; 
+            overflow-y: auto; 
+            -webkit-overflow-scrolling: touch; 
+        }
+        
+        .search-container { margin-bottom: 40px; max-width: 640px; width: 100%; }
+        .search-bar { 
+            width: 100%; 
+            padding: 16px 28px; 
+            background: #0e0e11; 
+            border: 1px solid var(--border); 
+            border-radius: 14px; 
+            color: white; 
+            font-size: 16px; 
+            transition: all 0.2s ease;
+        }
+        .search-bar:focus { 
+            border-color: var(--primary); 
+            outline: none; 
+            box-shadow: 0 0 0 3px var(--primary-glow);
+            background: #141417;
+        }
 
-        h2 { font-size: 1.5rem; font-weight: 700; margin: 0 0 20px 0; }
-        .results-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 16px; }
+        h2 { font-size: 1.7rem; font-weight: 800; margin: 0 0 24px 0; letter-spacing: -0.03em; }
+        
+        .results-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); 
+            gap: 20px; 
+        }
 
-        .track-card { background: var(--bg-card); padding: 12px; border-radius: 12px; border: 1px solid var(--border); cursor: pointer; position: relative; }
-        .track-card:hover { background: var(--bg-card-hover); transform: translateY(-2px); }
-        .track-cover { width: 100%; aspect-ratio: 1; background-size: cover; background-position: center; border-radius: 8px; margin-bottom: 10px; }
-        .track-title { font-size: 0.9rem; font-weight: 600; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 20px; }
-        .track-artist { font-size: 0.8rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .track-card { 
+            background: var(--bg-card); 
+            padding: 14px; 
+            border-radius: 16px; 
+            border: 1px solid var(--border); 
+            cursor: pointer; 
+            position: relative; 
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .track-card:hover { 
+            background: var(--bg-card-hover); 
+            transform: translateY(-4px); 
+            border-color: #2e2e35;
+            box-shadow: 0 12px 24px rgba(0,0,0,0.4);
+        }
+        .track-cover { 
+            width: 100%; 
+            aspect-ratio: 1; 
+            background-size: cover; 
+            background-position: center; 
+            border-radius: 10px; 
+            margin-bottom: 14px; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+        .track-title { 
+            font-size: 0.95rem; 
+            font-weight: 700; 
+            margin-bottom: 6px; 
+            white-space: nowrap; 
+            overflow: hidden; 
+            text-overflow: ellipsis; 
+            padding-right: 24px; 
+        }
+        .track-artist { 
+            font-size: 0.8rem; 
+            color: var(--text-muted); 
+            white-space: nowrap; 
+            overflow: hidden; 
+            text-overflow: ellipsis; 
+            font-weight: 500;
+        }
 
-        .like-btn { position: absolute; bottom: 12px; right: 12px; background: transparent; border: none; color: var(--text-muted); font-size: 1.1rem; cursor: pointer; }
+        .like-btn { 
+            position: absolute; 
+            bottom: 14px; 
+            right: 14px; 
+            background: transparent; 
+            border: none; 
+            color: var(--text-muted); 
+            font-size: 1.2rem; 
+            cursor: pointer; 
+            transition: transform 0.2s;
+        }
+        .like-btn:hover { transform: scale(1.2); }
         .like-btn.liked { color: var(--primary); }
 
-        .player-bar { position: fixed; bottom: 0; left: 0; right: 0; height: 100px; background: var(--player-bg); border-top: 1px solid var(--border); display: none; align-items: center; justify-content: space-between; padding: 0 24px; z-index: 100; }
-        .player-track-info { display: flex; align-items: center; gap: 12px; width: 30%; min-width: 180px; }
-        .player-mini-cover { width: 48px; height: 48px; border-radius: 6px; background-size: cover; background-position: center; flex-shrink: 0; }
+        .player-bar { 
+            position: fixed; 
+            bottom: 0; 
+            left: 0; 
+            right: 0; 
+            height: 110px; 
+            background: rgba(12, 12, 14, 0.85); 
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-top: 1px solid var(--border); 
+            display: none; 
+            align-items: center; 
+            justify-content: space-between; 
+            padding: 0 32px; 
+            z-index: 100; 
+        }
+        .player-track-info { display: flex; align-items: center; gap: 16px; width: 35%; min-width: 220px; }
+        .player-mini-cover { width: 56px; height: 56px; border-radius: 10px; background-size: cover; background-position: center; flex-shrink: 0; box-shadow: 0 4px 8px rgba(0,0,0,0.4); }
         .player-text-details { overflow: hidden; }
-        .player-current-title { font-size: 0.85rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .player-current-artist { font-size: 0.75rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .player-current-title { font-size: 0.95rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px; }
+        .player-current-artist { font-size: 0.8rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-        .player-controls { width: 40%; max-width: 450px; display: flex; justify-content: flex-end; }
-        .yt-hidden-container { width: 200px; height: 45px; border-radius: 4px; overflow: hidden; }
+        .player-controls { width: 45%; max-width: 480px; display: flex; justify-content: flex-end; }
+        .yt-hidden-container { width: 240px; height: 50px; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); background: #000; }
         .yt-hidden-container iframe { width: 100%; height: 100%; border: none; }
 
-        .mobile-nav { display: none; position: fixed; bottom: 0; left: 0; right: 0; height: 60px; background: var(--bg-sidebar); border-top: 1px solid var(--border); justify-content: space-around; align-items: center; z-index: 99; }
-        .mobile-nav-btn { background: transparent; border: none; color: var(--text-muted); font-size: 0.85rem; font-weight: 600; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+        .mobile-nav { display: none; position: fixed; bottom: 0; left: 0; right: 0; height: 64px; background: rgba(9, 9, 11, 0.9); backdrop-filter: blur(10px); border-top: 1px solid var(--border); justify-content: space-around; align-items: center; z-index: 99; }
+        .mobile-nav-btn { background: transparent; border: none; color: var(--text-muted); font-size: 0.85rem; font-weight: 700; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; }
         .mobile-nav-btn.active { color: var(--primary); }
 
         @media (max-width: 768px) {
             body { flex-direction: column; }
             .sidebar { display: none; }
             .mobile-nav { display: flex; }
-            .main-content { padding: 16px 16px 180px 16px; }
-            .results-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; }
-            .player-bar { bottom: 60px; height: 120px; flex-direction: column; padding: 10px; justify-content: center; gap: 8px;}
-            .player-track-info { width: 100%; justify-content: center; }
+            .main-content { padding: 24px 24px 200px 24px; }
+            .results-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 14px; }
+            .player-bar { bottom: 64px; height: 130px; flex-direction: column; padding: 14px; justify-content: center; gap: 12px;}
+            .player-track-info { width: 100%; justify-content: center; text-align: center; }
             .player-controls { width: 100%; justify-content: center; }
         }
     </style>
+    <!-- Carica il core di Firebase e i moduli in modalità Compat -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-    <script src="firebase-config.js"></script>
+    <!-- Riferimento corretto al file rinominato -->
+    <script src="firebase-loader.js"></script>
 </head>
 <body>
 
@@ -118,8 +262,8 @@
         <div>
             <div class="brand">🦂 Scorpion<span>Pulse</span></div>
             <div class="menu-group">
-                <button class="menu-btn active" id="menu-dashboard">🎵 Dashboard</button>
-                <button class="menu-btn" id="menu-favorites">💜 Preferiti</button>
+                <button class="menu-btn active" id="menu-dashboard"><span>🎵</span> Dashboard</button>
+                <button class="menu-btn" id="menu-favorites"><span>💜</span> Preferiti</button>
             </div>
         </div>
         <div class="user-panel">
@@ -130,7 +274,7 @@
 
     <div class="main-content">
         <div class="search-container" id="search-box-wrapper">
-            <input type="text" class="search-bar" id="search-input" placeholder="Cerca tracce o artisti...">
+            <input type="text" class="search-bar" id="search-input" placeholder="Cerca tracce, artisti, drill, trap...">
         </div>
         <h2 id="section-title">In Evidenza</h2>
         <div class="results-grid" id="results-container"></div>
@@ -161,18 +305,10 @@
         let modalitaCorrente = "dashboard";
         let timeoutRicerca = null;
 
-        // Istanze stabili di riserva per evitare i blocchi CORS
-        const istanzeRicerca = [
-            "https://vid.puffyan.us",
-            "https://invidious.projectsegfaut.space",
-            "https://inv.tux.digital"
-        ];
-
         const searchInput = document.getElementById('search-input');
         const resultsContainer = document.getElementById('results-container');
         const engineContainer = document.getElementById('player-engine-target');
 
-        // Controllo della sessione utente
         if (window.auth) {
             window.auth.onAuthStateChanged((user) => {
                 if (user) {
@@ -189,30 +325,42 @@
         document.getElementById('btn-logout').addEventListener('click', logoutAzione);
         document.getElementById('m-btn-logout').addEventListener('click', logoutAzione);
 
-        function eseguiRicerca(chiave, indexNode = 0) {
-            if (indexNode >= istanzeRicerca.length) {
-                resultsContainer.innerHTML = "<p style='color: var(--primary);'>Nessun catalogo disponibile. Riprova.</p>";
-                return;
-            }
+        // FUNZIONE DI RICERCA AGGIORNATA CON BYPASS PROXY PER EVITARE ERRORI CORS
+        function eseguiRicerca(chiave) {
+            document.getElementById('section-title').innerText = "Risultati per: " + chiave;
+            resultsContainer.innerHTML = "<p style='color: var(--text-muted);'>Ottimizzazione stream...</p>";
 
-            if (indexNode === 0) {
-                document.getElementById('section-title').innerText = "Risultati per: " + chiave;
-                resultsContainer.innerHTML = "<p style='color: var(--text-muted);'>Cerca brani...</p>";
-            }
+            const targetUrl = `https://vid.puffyan.us/api/v1/search?q=${encodeURIComponent(chiave)}&type=video`;
+            const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
 
-            fetch(`${istanzeRicerca[indexNode]}/api/v1/search?q=${encodeURIComponent(chiave)}&type=video`)
-                .then(res => { if(!res.ok) throw new Error(); return res.json(); })
-                .then(data => {
+            fetch(proxyUrl)
+                .then(res => { if (!res.ok) throw new Error(); return res.json(); })
+                .then(wrapper => {
+                    const data = JSON.parse(wrapper.contents);
                     if (data && data.length > 0) {
                         resultsContainer.innerHTML = "";
                         data.slice(0, 24).forEach(video => {
                             creaCardBrano(video.videoId, video.title, video.author, `https://i.ytimg.com/vi/${video.videoId}/hqdefault.jpg`);
                         });
                     } else {
-                        eseguiRicerca(chiave, indexNode + 1);
+                        resultsContainer.innerHTML = "<p style='color: var(--primary);'>Nessun brano trovato.</p>";
                     }
                 })
-                .catch(() => { eseguiRicerca(chiave, indexNode + 1); });
+                .catch(() => {
+                    // Fallback d'emergenza pulito basato sui completamenti veloci
+                    fetch(`https://suggestqueries.google.com/complete/search?client=youtube&ds=yt&q=${encodeURIComponent(chiave)}`)
+                        .then(r => r.json())
+                        .then(res => {
+                            if(res[1] && res[1][0]) {
+                                const backupTerm = res[1][0][0];
+                                resultsContainer.innerHTML = `<button class="logout-btn" style="width:auto; padding:12px 24px;" onclick="eseguiRicerca('${backupTerm}')">🔄 Rigenera network per: ${backupTerm}</button>`;
+                            } else {
+                                resultsContainer.innerHTML = "<p style='color: var(--primary);'>Connessione rifiutata dai nodi. Riprova.</p>";
+                            }
+                        }).catch(() => {
+                            resultsContainer.innerHTML = "<p style='color: var(--primary);'>Errore di rete.</p>";
+                        });
+                });
         }
 
         function caricaTopTracks() {
@@ -226,7 +374,7 @@
             const query = searchInput.value.trim();
             if (query.length === 0) { caricaTopTracks(); return; }
             if (query.length < 2) return;
-            timeoutRicerca = setTimeout(() => { if(modalitaCorrente === "dashboard") eseguiRicerca(query); }, 500);
+            timeoutRicerca = setTimeout(() => { if(modalitaCorrente === "dashboard") eseguiRicerca(query); }, 600);
         });
 
         function creaCardBrano(id, titolo, artista, copertinaUrl) {
@@ -249,7 +397,7 @@
                 document.getElementById('p-title').innerText = titolo;
                 document.getElementById('p-artist').innerText = artista;
 
-                // RIPRODUZIONE SENZA BLOCCO DEI 39 SECONDI
+                // Embed corazzato no-cookie senza limiti temporali di riproduzione
                 engineContainer.innerHTML = `
                     <iframe src="https://www.youtube-nocookie.com/embed/${id}?autoplay=1&controls=1&modestbranding=1" 
                             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
@@ -294,7 +442,7 @@
             document.getElementById('section-title').innerText = "I tuoi Preferiti 💜";
             resultsContainer.innerHTML = "";
             if (preferitiIds.length === 0) {
-                resultsContainer.innerHTML = "<p style='color: var(--text-muted);'>Nessun brano salvato.</p>";
+                resultsContainer.innerHTML = "<p style='color: var(--text-muted); padding: 10px;'>Nessun brano salvato nei tuoi preferiti.</p>";
                 return;
             }
             window.db.collection("users").doc(utenteCorrente.uid).collection("favorites").orderBy("timestamp", "desc").get()
@@ -329,7 +477,7 @@
         document.getElementById('menu-favorites').addEventListener('click', attivaPreferiti);
         document.getElementById('m-menu-favorites').addEventListener('click', attivaPreferiti);
 
-        setTimeout(() => { caricaTopTracks(); }, 1000);
+        setTimeout(() => { caricaTopTracks(); }, 800);
     </script>
 </body>
 </html>

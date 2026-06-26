@@ -5,212 +5,94 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Scorpion Pulse - Login</title>
     <style>
-        :root {
-            --bg-main: #09090b;
-            --bg-card: #141417;
-            --primary: #ff2a2a;
-            --text-main: #ffffff;
-            --text-muted: #a1a1aa;
-            --border: #27272a;
-        }
-
         body {
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            background-color: var(--bg-main);
-            color: var(--text-main);
-            margin: 0;
-            padding: 0;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background-color: #09090b;
+            color: #ffffff;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
+            margin: 0;
         }
-
-        .login-container {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            padding: 40px;
-            border-radius: 16px;
+        .auth-container {
+            background: #141417;
+            padding: 32px;
+            border-radius: 12px;
+            border: 1px solid #27272a;
             width: 100%;
             max-width: 400px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
-            box-sizing: border-box;
         }
-
-        .brand {
-            font-size: 1.8rem;
-            font-weight: 800;
-            letter-spacing: 1px;
-            text-align: center;
-            margin-bottom: 24px;
-        }
-
-        .brand span {
-            color: var(--primary);
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        label {
-            font-size: 0.9rem;
-            color: var(--text-muted);
-            font-weight: 600;
-        }
-
+        h2 { margin-bottom: 24px; font-weight: 700; text-align: center; }
+        h2 span { color: #ff2a2a; }
+        .input-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; color: #a1a1aa; font-size: 0.9rem; }
         input {
-            padding: 12px 16px;
+            width: 100%;
+            padding: 12px;
             background: #09090b;
-            border: 1px solid var(--border);
-            border-radius: 8px;
+            border: 1px solid #27272a;
+            border-radius: 6px;
             color: white;
-            font-size: 0.95rem;
-            transition: all 0.2s;
+            font-size: 1rem;
         }
-
-        input:focus {
-            border-color: var(--primary);
-            outline: none;
-            box-shadow: 0 0 10px rgba(255, 42, 42, 0.15);
-        }
-
-        .btn-submit {
-            background: var(--primary);
+        input:focus { border-color: #ff2a2a; outline: none; }
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #ff2a2a;
             color: white;
             border: none;
-            padding: 14px;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-weight: 700;
-            cursor: pointer;
-            width: 100%;
-            margin-top: 10px;
-            transition: background 0.2s, transform 0.1s;
-        }
-
-        .btn-submit:hover {
-            background: #e02525;
-        }
-
-        .btn-submit:active {
-            transform: scale(0.98);
-        }
-
-        .switch-mode {
-            text-align: center;
-            margin-top: 20px;
-            font-size: 0.85rem;
-            color: var(--text-muted);
-        }
-
-        .switch-mode a {
-            color: var(--primary);
-            text-decoration: none;
+            border-radius: 6px;
             font-weight: 600;
+            cursor: pointer;
+            font-size: 1rem;
+            margin-top: 10px;
         }
-
-        .switch-mode a:hover {
-            text-decoration: underline;
-        }
+        .error-msg { color: #ff2a2a; font-size: 0.85rem; margin-top: 10px; text-align: center; display: none; }
+        p { text-align: center; color: #a1a1aa; margin-top: 20px; font-size: 0.9rem; }
+        a { color: #ff2a2a; text-decoration: none; font-weight: 600; }
     </style>
-
-    <!-- FIREBASE LIBRARIES -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-    <script src="firebase-loader.js?v=2"></script>
+    <script src="firebase-config.js"></script>
 </head>
 <body>
 
-    <div class="login-container">
-        <div class="brand">🦂 Scorpion<span>Pulse</span></div>
-        
+    <div class="auth-container">
+        <h2>🦂 Scorpion<span>Pulse</span></h2>
         <form id="login-form">
-            <div class="form-group">
-                <label for="email-input">Email</label>
-                <input type="email" id="email-input" placeholder="inserisci la tua email" required>
+            <div class="input-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" required autocomplete="email">
             </div>
-            
-            <div class="form-group">
-                <label for="password-input">Password</label>
-                <input type="password" id="password-input" placeholder="••••••••" required>
+            <div class="input-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" required autocomplete="current-password">
             </div>
-            
-            <button type="submit" class="btn-submit">Accedi</button>
+            <button type="submit">Accedi</button>
+            <div class="error-msg" id="error-message"></div>
         </form>
-
-        <div class="switch-mode">
-            Non hai un account? <a href="#" id="link-register">Registrati qui</a>
-        </div>
+        <p>Non hai un account? <a href="registrati.html">Registrati</a></p>
     </div>
 
     <script>
-        const loginForm = document.getElementById('login-form');
-        const linkRegister = document.getElementById('link-register');
-        let isRegisterMode = false;
-
-        // Gestione del cambio interfaccia Login / Registrazione
-        linkRegister.addEventListener('click', (e) => {
+        document.getElementById('login-form').addEventListener('submit', (e) => {
             e.preventDefault();
-            isRegisterMode = !isRegisterMode;
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            const errorDiv = document.getElementById('error-message');
             
-            const btnSubmit = document.querySelector('.btn-submit');
-            const switchText = document.getElementById('switch-mode');
-            
-            if (isRegisterMode) {
-                btnSubmit.innerText = "Registrati";
-                linkRegister.innerText = "Accedi qui";
-                document.querySelector('.switch-mode').innerHTML = `Hai già un account? <a href="#" id="link-register">Accedi qui</a>`;
-            } else {
-                btnSubmit.innerText = "Accedi";
-                linkRegister.innerText = "Registrati qui";
-                document.querySelector('.switch-mode').innerHTML = `Non hai un account? <a href="#" id="link-register">Registrati qui</a>`;
-            }
-            // Ricollega l'evento sul link appena rigenerato
-            document.getElementById('link-register').addEventListener('click', arguments.callee);
-        });
+            errorDiv.style.display = "none";
 
-        // GESTORE DI INVIO DATI SICURO (FIX ERRORE RIGA 182)
-        loginForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            
-            const email = document.getElementById('email-input').value.trim();
-            const password = document.getElementById('password-input').value;
-
-            // Controllo se l'oggetto auth e il metodo signIn esistono davvero
-            if (typeof auth !== 'undefined' && typeof auth.signInWithEmailAndPassword === 'function') {
-                
-                if (isRegisterMode) {
-                    // Logica di Registrazione Nuova
-                    auth.createUserWithEmailAndPassword(email, password)
-                        .then(() => {
-                            window.location.href = "index.html";
-                        })
-                        .catch((error) => {
-                            alert("Errore registrazione: " + error.message);
-                        });
-                } else {
-                    // Logica di Login Tradizionale
-                    auth.signInWithEmailAndPassword(email, password)
-                        .then(() => {
-                            window.location.href = "index.html";
-                        })
-                        .catch((error) => {
-                            alert("Errore accesso: " + error.message);
-                        });
-                }
-
-            } else {
-                // FALL-BACK DI EMERGENZA (Se Firebase ha un blocco o non è configurato)
-                console.warn("Rilevato problema Firebase. Bypass di sicurezza attivo: Accesso locale.");
-                
-                // Ti reindirizza direttamente alla dashboard per farti testare i brani
-                window.location.href = "index.html";
-            }
+            window.auth.signInWithEmailAndPassword(email, password)
+                .then(() => {
+                    window.location.href = "index.html";
+                })
+                .catch((error) => {
+                    errorDiv.innerText = "Credenziali non valide o errore di rete.";
+                    errorDiv.style.display = "block";
+                });
         });
     </script>
 </body>

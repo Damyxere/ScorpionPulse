@@ -25,7 +25,6 @@
             -webkit-tap-highlight-color: transparent; 
         }
 
-        /* Custom scrollbar super sottile */
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: var(--bg-main); }
         ::-webkit-scrollbar-thumb { background: #27272a; border-radius: 3px; }
@@ -249,11 +248,9 @@
             .player-controls { width: 100%; justify-content: center; }
         }
     </style>
-    <!-- Carica il core di Firebase e i moduli in modalità Compat -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-    <!-- Riferimento corretto al file rinominato -->
     <script src="firebase-loader.js"></script>
 </head>
 <body>
@@ -309,6 +306,14 @@
         const resultsContainer = document.getElementById('results-container');
         const engineContainer = document.getElementById('player-engine-target');
 
+        // Nodi Invidious pubblici stabili con CORS sbloccato
+        const nodiInvidious = [
+            "https://inv.tux.digital",
+            "https://invidious.projectsegfaut.space",
+            "https://vid.puffyan.us",
+            "https://invidious.perennialte.ch"
+        ];
+
         if (window.auth) {
             window.auth.onAuthStateChanged((user) => {
                 if (user) {
@@ -325,47 +330,41 @@
         document.getElementById('btn-logout').addEventListener('click', logoutAzione);
         document.getElementById('m-btn-logout').addEventListener('click', logoutAzione);
 
-        // FUNZIONE DI RICERCA AGGIORNATA CON BYPASS PROXY PER EVITARE ERRORI CORS
-        function eseguiRicerca(chiave) {
-            document.getElementById('section-title').innerText = "Risultati per: " + chiave;
-            resultsContainer.innerHTML = "<p style='color: var(--text-muted);'>Ottimizzazione stream...</p>";
+        // FUNZIONE DI RICERCA A CATENA (PROVA UN NODO ALLA VOLTA IN AUTOMATICO)
+        function eseguiRicerca(chiave, nodoIndex = 0) {
+            if (nodoIndex === 0) {
+                document.getElementById('section-title').innerText = "Risultati per: " + chiave;
+                resultsContainer.innerHTML = "<p style='color: var(--text-muted);'>Connessione al network musicale...</p>";
+            }
 
-            const targetUrl = `https://vid.puffyan.us/api/v1/search?q=${encodeURIComponent(chiave)}&type=video`;
-            const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
+            if (nodoIndex >= nodiInvidious.length) {
+                resultsContainer.innerHTML = "<p style='color: var(--primary);'>Tutti i nodi sono momentaneamente carichi. Riprova tra un attimo.</p>";
+                return;
+            }
 
-            fetch(proxyUrl)
+            const urlConfigurato = `${nodiInvidious[nodoIndex]}/api/v1/search?q=${encodeURIComponent(chiave)}&type=video`;
+
+            fetch(urlConfigurato)
                 .then(res => { if (!res.ok) throw new Error(); return res.json(); })
-                .then(wrapper => {
-                    const data = JSON.parse(wrapper.contents);
+                .then(data => {
                     if (data && data.length > 0) {
                         resultsContainer.innerHTML = "";
                         data.slice(0, 24).forEach(video => {
                             creaCardBrano(video.videoId, video.title, video.author, `https://i.ytimg.com/vi/${video.videoId}/hqdefault.jpg`);
                         });
                     } else {
-                        resultsContainer.innerHTML = "<p style='color: var(--primary);'>Nessun brano trovato.</p>";
+                        eseguiRicerca(chiave, nodoIndex + 1);
                     }
                 })
                 .catch(() => {
-                    // Fallback d'emergenza pulito basato sui completamenti veloci
-                    fetch(`https://suggestqueries.google.com/complete/search?client=youtube&ds=yt&q=${encodeURIComponent(chiave)}`)
-                        .then(r => r.json())
-                        .then(res => {
-                            if(res[1] && res[1][0]) {
-                                const backupTerm = res[1][0][0];
-                                resultsContainer.innerHTML = `<button class="logout-btn" style="width:auto; padding:12px 24px;" onclick="eseguiRicerca('${backupTerm}')">🔄 Rigenera network per: ${backupTerm}</button>`;
-                            } else {
-                                resultsContainer.innerHTML = "<p style='color: var(--primary);'>Connessione rifiutata dai nodi. Riprova.</p>";
-                            }
-                        }).catch(() => {
-                            resultsContainer.innerHTML = "<p style='color: var(--primary);'>Errore di rete.</p>";
-                        });
+                    console.log(`Nodo ${nodoIndex} fallito. Switch sul prossimo...`);
+                    eseguiRicerca(chiave, nodoIndex + 1);
                 });
         }
 
         function caricaTopTracks() {
             if (modalitaCorrente !== "dashboard") return;
-            eseguiRicerca("Skinny Shiva Sfera Rondodasosa");
+            eseguiRicerca("Skinny Shiva Sfera Rondodasosa", 0);
             document.getElementById('section-title').innerText = "In Evidenza su Scorpion Pulse";
         }
 
@@ -374,7 +373,7 @@
             const query = searchInput.value.trim();
             if (query.length === 0) { caricaTopTracks(); return; }
             if (query.length < 2) return;
-            timeoutRicerca = setTimeout(() => { if(modalitaCorrente === "dashboard") eseguiRicerca(query); }, 600);
+            timeoutRicerca = setTimeout(() => { if(modalitaCorrente === "dashboard") eseguiRicerca(query, 0); }, 600);
         });
 
         function creaCardBrano(id, titolo, artista, copertinaUrl) {
@@ -397,7 +396,6 @@
                 document.getElementById('p-title').innerText = titolo;
                 document.getElementById('p-artist').innerText = artista;
 
-                // Embed corazzato no-cookie senza limiti temporali di riproduzione
                 engineContainer.innerHTML = `
                     <iframe src="https://www.youtube-nocookie.com/embed/${id}?autoplay=1&controls=1&modestbranding=1" 
                             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
@@ -474,10 +472,4 @@
 
         document.getElementById('menu-dashboard').addEventListener('click', attivaDashboard);
         document.getElementById('m-menu-dashboard').addEventListener('click', attivaDashboard);
-        document.getElementById('menu-favorites').addEventListener('click', attivaPreferiti);
-        document.getElementById('m-menu-favorites').addEventListener('click', attivaPreferiti);
-
-        setTimeout(() => { caricaTopTracks(); }, 800);
-    </script>
-</body>
-</html>
+        document.getElementById('menu

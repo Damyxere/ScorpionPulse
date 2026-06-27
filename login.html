@@ -2,98 +2,232 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Scorpion Pulse - Login</title>
     <style>
+        :root {
+            --bg-main: #050507;
+            --bg-card: #0c0c0e;
+            --primary: #ff2a2a;
+            --primary-glow: rgba(255, 42, 42, 0.25);
+            --text-main: #f4f4f5;
+            --text-muted: #71717a;
+            --border: #1f1f23;
+            --error: #ef4444;
+        }
+
+        * { 
+            box-sizing: border-box; 
+            margin: 0; 
+            padding: 0; 
+            -webkit-tap-highlight-color: transparent; 
+        }
+
         body {
-            font-family: 'Segoe UI', system-ui, sans-serif;
-            background-color: #09090b;
-            color: #ffffff;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-main);
             display: flex;
-            justify-content: center;
             align-items: center;
-            height: 100vh;
-            margin: 0;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+            letter-spacing: -0.02em;
         }
+
         .auth-container {
-            background: #141417;
-            padding: 32px;
-            border-radius: 12px;
-            border: 1px solid #27272a;
             width: 100%;
-            max-width: 400px;
+            max-width: 420px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 40px 32px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
         }
-        h2 { margin-bottom: 24px; font-weight: 700; text-align: center; }
-        h2 span { color: #ff2a2a; }
-        .input-group { margin-bottom: 20px; }
-        label { display: block; margin-bottom: 8px; color: #a1a1aa; font-size: 0.9rem; }
-        input {
-            width: 100%;
-            padding: 12px;
-            background: #09090b;
-            border: 1px solid #27272a;
-            border-radius: 6px;
-            color: white;
-            font-size: 1rem;
+
+        .brand { 
+            font-size: 1.8rem; 
+            font-weight: 900; 
+            text-align: center;
+            letter-spacing: 0.5px; 
+            text-transform: uppercase;
+            text-shadow: 0 0 20px var(--primary-glow);
+            margin-bottom: 8px;
         }
-        input:focus { border-color: #ff2a2a; outline: none; }
-        button {
+        .brand span { color: var(--primary); }
+
+        .subtitle {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            text-align: center;
+            margin-bottom: 32px;
+            font-weight: 500;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-main);
+        }
+
+        .form-input { 
+            width: 100%; 
+            padding: 14px 18px; 
+            background: #121214; 
+            border: 1px solid var(--border); 
+            border-radius: 12px; 
+            color: white; 
+            font-size: 15px; 
+            transition: all 0.2s ease;
+        }
+        .form-input:focus { 
+            border-color: var(--primary); 
+            outline: none; 
+            box-shadow: 0 0 0 3px var(--primary-glow);
+            background: #161619;
+        }
+
+        .btn-auth {
             width: 100%;
-            padding: 12px;
-            background: #ff2a2a;
+            background: var(--primary);
             color: white;
             border: none;
-            border-radius: 6px;
-            font-weight: 600;
-            cursor: pointer;
+            padding: 14px;
+            border-radius: 12px;
             font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
             margin-top: 10px;
+            box-shadow: 0 4px 15px var(--primary-glow);
         }
-        .error-msg { color: #ff2a2a; font-size: 0.85rem; margin-top: 10px; text-align: center; display: none; }
-        p { text-align: center; color: #a1a1aa; margin-top: 20px; font-size: 0.9rem; }
-        a { color: #ff2a2a; text-decoration: none; font-weight: 600; }
+        .btn-auth:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px var(--primary-glow);
+        }
+        .btn-auth:disabled {
+            background: #27272a;
+            color: var(--text-muted);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .global-error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid var(--error);
+            color: var(--error);
+            padding: 12px;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .switch-auth {
+            text-align: center;
+            margin-top: 24px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+        .switch-auth a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 700;
+            margin-left: 4px;
+        }
+        .switch-auth a:hover {
+            text-decoration: underline;
+        }
     </style>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-    <script src="firebase-config.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="firebase-loader.js"></script>
 </head>
 <body>
 
     <div class="auth-container">
-        <h2>🦂 Scorpion<span>Pulse</span></h2>
-        <form id="login-form">
-            <div class="input-group">
-                <label for="email">Email</label>
-                <input type="email" id="email" required autocomplete="email">
+        <div class="brand">🦂 Scorpion<span>Pulse</span></div>
+        <div class="subtitle">Accedi per ascoltare la tua musica</div>
+
+        <div class="global-error" id="error-generale"></div>
+
+        <form id="login-form" onsubmit="effettuaLogin(event)">
+            <div class="form-group">
+                <label for="email">Indirizzo Email</label>
+                <input type="email" id="email" class="form-input" placeholder="esempio@email.com" required autocomplete="email">
             </div>
-            <div class="input-group">
+
+            <div class="form-group">
                 <label for="password">Password</label>
-                <input type="password" id="password" required autocomplete="current-password">
+                <input type="password" id="password" class="form-input" placeholder="Inserisci la tua password" required autocomplete="current-password">
             </div>
-            <button type="submit">Accedi</button>
-            <div class="error-msg" id="error-message"></div>
+
+            <button type="submit" class="btn-auth" id="btn-submit">Accedi</button>
         </form>
-        <p>Non hai un account? <a href="registrati.html">Registrati</a></p>
+
+        <div class="switch-auth">
+            Non hai un account?<a href="registrati.html">Registrati</a>
+        </div>
     </div>
 
     <script>
-        document.getElementById('login-form').addEventListener('submit', (e) => {
+        const errorGenerale = document.getElementById('error-generale');
+        const btnSubmit = document.getElementById('btn-submit');
+
+        function effettuaLogin(e) {
             e.preventDefault();
+            errorGenerale.style.display = "none";
+
             const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value;
-            const errorDiv = document.getElementById('error-message');
-            
-            errorDiv.style.display = "none";
+
+            // Controllo di sicurezza se Firebase non ha fatto in tempo a caricare
+            if (!window.auth) {
+                errorGenerale.innerText = "Il sistema sta caricando i moduli di sicurezza. Attendi un secondo e riprova.";
+                errorGenerale.style.display = "block";
+                return;
+            }
+
+            btnSubmit.disabled = true;
+            btnSubmit.innerText = "Verifica credenziali...";
 
             window.auth.signInWithEmailAndPassword(email, password)
                 .then(() => {
+                    // Login completato con successo, si va all'index
                     window.location.href = "index.html";
                 })
                 .catch((error) => {
-                    errorDiv.innerText = "Credenziali non valide o errore di rete.";
-                    errorDiv.style.display = "block";
+                    console.error(error);
+                    btnSubmit.disabled = false;
+                    btnSubmit.innerText = "Accedi";
+                    errorGenerale.style.display = "block";
+
+                    // Traduzione pulita degli errori di login per l'utente
+                    switch (error.code) {
+                        case 'auth/invalid-credential':
+                        case 'auth/user-not-found':
+                        case 'auth/wrong-password':
+                            errorGenerale.innerText = "Email o password non corrette. Riprova.";
+                            break;
+                        case 'auth/invalid-email':
+                            errorGenerale.innerText = "L'indirizzo email immesso non è valido.";
+                            break;
+                        default:
+                            errorGenerale.innerText = "Impossibile accedere: " + error.message;
+                    }
                 });
-        });
+        }
     </script>
 </body>
 </html>
